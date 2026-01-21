@@ -18,51 +18,19 @@ from functools import lru_cache
 
 @st.cache_data(ttl=86400)
 def download_data_from_github():
-    """GitHub Releases에서 데이터 다운로드"""
+    """저장소에 포함된 data 폴더 사용"""
     
     data_dir = Path('./data')
     
-    # 이미 있으면 스킵 (효율적인 존재 확인)
+    # CSV 파일 존재 확인
     if data_dir.exists() and next(data_dir.glob('*.csv'), None) is not None:
+        csv_count = sum(1 for _ in data_dir.glob('*.csv'))
         return
     
-    try:
-        # 기존 data 폴더 삭제
-        if data_dir.exists():
-            import shutil
-            shutil.rmtree(data_dir)
-        
-        repo = "kjs9964/benchmark_visualizer"
-        tag = "v2.2.0"
-        url = f"https://github.com/{repo}/releases/download/{tag}/data.zip"
-        
-        # 스트리밍 다운로드 (메모리 효율적)
-        st.info("📥 데이터 다운로드 중...")
-        with requests.get(url, timeout=60, stream=True) as response:
-            response.raise_for_status()
-            with open('data.zip', 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
-        
-        with zipfile.ZipFile('data.zip', 'r') as zip_ref:
-            zip_ref.extractall('.')
-        
-        os.remove('data.zip')
-        
-        # 검증 (효율적인 카운트)
-        if not data_dir.exists():
-            raise Exception("data 폴더가 생성되지 않았습니다")
-        
-        csv_count = sum(1 for _ in data_dir.glob('*.csv'))
-        if csv_count == 0:
-            raise Exception("CSV 파일이 없습니다")
-        
-        st.success(f"✅ 데이터 로드 완료 ({csv_count}개 파일)")
-        
-    except Exception as e:
-        st.error(f"❌ 데이터 다운로드 실패: {str(e)}")
-        st.error("GitHub Release 확인: https://github.com/kjs9964/benchmark_visualizer/releases")
-        st.stop()
+    # data 폴더가 없거나 CSV 파일이 없으면 에러
+    st.error("❌ data 폴더 또는 CSV 파일이 없습니다.")
+    st.error("저장소에 data 폴더와 CSV 파일이 포함되어 있는지 확인해주세요.")
+    st.stop()
 
 # 페이지 설정
 st.set_page_config(
