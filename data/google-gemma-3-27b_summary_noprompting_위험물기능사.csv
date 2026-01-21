@@ -1,0 +1,2 @@
+﻿모델명,데이터셋,정확도(%),정답수,전체문제,총시간(초),평균시간(초),입력토큰,출력토큰,총토큰,cpu_count,cpu_model,gpu_count,gpu_model,ram_total_size
+google/gemma-3-27b,위험물기능사,52.67,158,300,94.92,0.32,33480,884,34364,20,aarch64,1,NVIDIA GB10,119.7

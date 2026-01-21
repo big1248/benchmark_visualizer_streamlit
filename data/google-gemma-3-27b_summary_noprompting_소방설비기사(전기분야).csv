@@ -1,0 +1,2 @@
+﻿모델명,데이터셋,정확도(%),정답수,전체문제,총시간(초),평균시간(초),입력토큰,출력토큰,총토큰,cpu_count,cpu_model,gpu_count,gpu_model,ram_total_size
+google/gemma-3-27b,소방설비기사(전기분야),51.33,154,300,97.05,0.32,34378,899,35277,20,aarch64,1,NVIDIA GB10,119.7

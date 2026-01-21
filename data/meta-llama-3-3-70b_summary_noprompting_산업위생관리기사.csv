@@ -1,0 +1,2 @@
+﻿모델명,데이터셋,정확도(%),정답수,전체문제,총시간(초),평균시간(초),입력토큰,출력토큰,총토큰,cpu_count,cpu_model,gpu_count,gpu_model,ram_total_size
+meta/llama-3.3-70b,산업위생관리기사,56.67,170,300,223.95,0.75,48838,610,49448,20,aarch64,1,NVIDIA GB10,119.7
