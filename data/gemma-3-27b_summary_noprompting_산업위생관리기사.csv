@@ -1,2 +1,0 @@
-﻿모델명,데이터셋,정확도(%),정답수,전체문제,총시간(초),평균시간(초),입력토큰,출력토큰,총토큰,cpu_count,cpu_model,gpu_count,gpu_model,ram_total_size,carbon_tracked
-google/gemma-3-27b,산업위생관리기사,52.33,157,300,191.36,0.64,41146,888,42034,32,"AMD64 Family 26 Model 112 Stepping 0, AuthenticAMD",1,AMD Radeon(TM) 8060S Graphics,95.78,No
