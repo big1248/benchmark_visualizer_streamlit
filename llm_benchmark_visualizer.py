@@ -1706,10 +1706,16 @@ def main():
         st.warning("No data files found in the specified directory.")
         return
     
-    # 정답여부 컬럼 생성
-    if 'Answer' in results_df.columns and '예측답' in results_df.columns:
+    # 정답여부 컬럼 처리 (CSV에 이미 있으면 그대로 사용)
+    if '정답여부' in results_df.columns:
+        # 이미 있는 정답여부 컬럼을 Boolean으로 변환 (문자열 'True'/'False' 처리)
+        results_df['정답여부'] = results_df['정답여부'].apply(
+            lambda x: x if isinstance(x, bool) else str(x).strip().lower() == 'true'
+        )
+    elif 'Answer' in results_df.columns and '예측답' in results_df.columns:
+        # 정답여부 컬럼이 없으면 새로 계산
         results_df['정답여부'] = results_df.apply(
-            lambda row: row['Answer'] == row['예측답'] if pd.notna(row['Answer']) and pd.notna(row['예측답']) else False,
+            lambda row: str(row['Answer']).strip() == str(row['예측답']).strip() if pd.notna(row['Answer']) and pd.notna(row['예측답']) else False,
             axis=1
         )
     
