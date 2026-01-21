@@ -1994,31 +1994,22 @@ def main():
     with tabs[0]:
         st.header(f"📊 {t['overview']}")
         
-        # 테스트셋 기반으로 실제 문제 수 계산 (Question 기준 중복 제거)
-        total_problems = 0
-        if selected_tests:
-            for test_name in selected_tests:
-                if test_name in testsets:
-                    # Question 기준 중복 제거 후 카운트
-                    if 'Question' in testsets[test_name].columns:
-                        total_problems += testsets[test_name]['Question'].nunique()
-                    else:
-                        total_problems += len(testsets[test_name])
+        # 테스트셋 기반으로 실제 문제 수 계산 (데이터 행 수 / 모델 수)
+        num_models = filtered_df['모델'].nunique()
+        total_problems = round(len(filtered_df) / num_models) if num_models > 0 else 0
         
         # 고유 문제 수는 filtered_df에서 중복 제거 (백업용)
         unique_questions = filtered_df['Question'].nunique()
-        num_models = filtered_df['모델'].nunique()
         
         # 테스트셋 기본 정보
         st.subheader("📋 " + ("테스트셋 정보" if lang == 'ko' else "Test Set Information"))
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            # 테스트셋 파일의 실제 문제 수 사용
-            display_problems = total_problems if total_problems > 0 else unique_questions
+            # 총 문제 수 = 데이터 행 수 / 모델 수 (Vercel과 동일한 방식)
             st.metric(
                 "총 문제 수" if lang == 'ko' else "Total Problems",
-                f"{display_problems:,}"
+                f"{total_problems:,}"
             )
         with col2:
             st.metric(
@@ -2026,11 +2017,10 @@ def main():
                 f"{num_models}"
             )
         with col3:
-            # 수정: 총 평가 횟수 = 총 문제 수 × 모델 수
-            actual_eval_count = display_problems * num_models
+            # 수정: 총 평가 횟수 = 필터된 데이터 행 수
             st.metric(
                 "총 평가 횟수" if lang == 'ko' else "Total Evaluations",
-                f"{actual_eval_count:,}"
+                f"{len(filtered_df):,}"
             )
         
         st.markdown("---")
@@ -2044,7 +2034,7 @@ def main():
         avg_accuracy = model_accuracies.mean() * 100
         
         # 평균 정답/오답 수 (모델당)
-        avg_problems_per_model = display_problems  # 모델당 평가한 문제 수 (테스트셋 기준)
+        avg_problems_per_model = total_problems  # 모델당 평가한 문제 수
         avg_correct = (avg_problems_per_model * avg_accuracy / 100) if avg_problems_per_model > 0 else 0
         avg_wrong = avg_problems_per_model - avg_correct
         
