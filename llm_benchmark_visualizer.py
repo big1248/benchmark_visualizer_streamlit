@@ -1994,12 +1994,16 @@ def main():
     with tabs[0]:
         st.header(f"📊 {t['overview']}")
         
-        # 테스트셋 기반으로 실제 문제 수 계산
+        # 테스트셋 기반으로 실제 문제 수 계산 (Question 기준 중복 제거)
         total_problems = 0
         if selected_tests:
             for test_name in selected_tests:
                 if test_name in testsets:
-                    total_problems += len(testsets[test_name])
+                    # Question 기준 중복 제거 후 카운트
+                    if 'Question' in testsets[test_name].columns:
+                        total_problems += testsets[test_name]['Question'].nunique()
+                    else:
+                        total_problems += len(testsets[test_name])
         
         # 고유 문제 수는 filtered_df에서 중복 제거 (백업용)
         unique_questions = filtered_df['Question'].nunique()
