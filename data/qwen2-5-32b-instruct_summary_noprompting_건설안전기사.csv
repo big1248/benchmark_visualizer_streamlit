@@ -1,0 +1,2 @@
+﻿모델명,데이터셋,정확도(%),정답수,전체문제,총시간(초),평균시간(초),입력토큰,출력토큰,총토큰,cpu_count,cpu_model,gpu_count,gpu_model,ram_total_size
+qwen2.5-32b-instruct,건설안전기사,66.33,199,300,198.55,0.66,44340,1607,45947,20,aarch64,1,NVIDIA GB10,119.7

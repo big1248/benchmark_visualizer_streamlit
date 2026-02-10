@@ -1,0 +1,2 @@
+﻿모델명,데이터셋,정확도(%),정답수,전체문제,추출실패,총시간(초),평균시간(초),입력토큰,출력토큰,총토큰,cpu_count,cpu_model,gpu_count,gpu_model,ram_total_size,carbon_tracked
+qwen/qwen3-30b-a3b-2507,산업안전지도사,58.0,174,300,11,52.34,0.17,67566,743,68309,20,aarch64,1,NVIDIA GB10,119.7,No

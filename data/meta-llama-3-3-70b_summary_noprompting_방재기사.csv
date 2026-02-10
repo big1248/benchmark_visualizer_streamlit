@@ -1,0 +1,2 @@
+﻿모델명,데이터셋,정확도(%),정답수,전체문제,총시간(초),평균시간(초),입력토큰,출력토큰,총토큰,cpu_count,cpu_model,gpu_count,gpu_model,ram_total_size
+meta/llama-3.3-70b,방재기사,58.82,80,136,102.72,0.76,23302,272,23574,20,aarch64,1,NVIDIA GB10,119.7
