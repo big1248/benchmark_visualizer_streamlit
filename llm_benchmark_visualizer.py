@@ -1420,10 +1420,12 @@ def load_data(data_dir):
         test_name = os.path.basename(file).replace("testset_", "").replace(".csv", "")
         try:
             df = pd.read_csv(file, encoding='utf-8')
+            df = df.dropna(subset=['Question'])  # 빈 행 제거
             testsets[test_name] = df
         except:
             try:
                 df = pd.read_csv(file, encoding='cp949')
+                df = df.dropna(subset=['Question'])  # 빈 행 제거
                 testsets[test_name] = df
             except:
                 continue
@@ -1525,6 +1527,12 @@ def load_data(data_dir):
     
     if results:
         results_df = pd.concat(results, ignore_index=True)
+        
+        # ⚡ 정답여부를 확실히 bool로 변환 (concat 시 bool/str 섞임 방지)
+        if '정답여부' in results_df.columns:
+            results_df['정답여부'] = results_df['정답여부'].apply(
+                lambda x: x if isinstance(x, (bool, np.bool_)) else str(x).strip().lower() == 'true'
+            )
     else:
         results_df = pd.DataFrame()
     
@@ -4078,36 +4086,6 @@ def main():
                         fig.update_traces(textposition='top center', marker_size=10, marker_line_color='black', marker_line_width=2, line_width=3)
                         fig.update_layout(height=400, xaxis_title='연도', yaxis_title='문제 수')
                         st.plotly_chart(fig, width='stretch')
-        
-        # ========================================
-        # 섹션 6: Top 20 오답률 높은 문제
-        # ========================================
-        st.markdown("---")
-        st.subheader("📊 " + ("오답률 높은 문제 Top 20" if lang == 'ko' else "Top 20 Problems by Incorrect Rate"))
-        
-        top_20 = problem_analysis.head(20)
-        
-        display_top_20 = pd.DataFrame({
-            ('문제 번호' if lang == 'ko' else 'Problem ID'): top_20['problem_id'],
-            ('과목' if lang == 'ko' else 'Subject'): top_20['Subject'],
-            ('오답 모델수' if lang == 'ko' else 'Incorrect Count'): top_20['incorrect_count'].astype(int),
-            ('정답 모델수' if lang == 'ko' else 'Correct Count'): top_20['correct_count'].astype(int),
-            ('총 모델수' if lang == 'ko' else 'Total Models'): top_20['total_count'].astype(int),
-            ('오답률' if lang == 'ko' else 'Wrong Rate'): (top_20['incorrect_rate'] * 100).round(2),
-            '정답 모델' if lang == 'ko' else 'Correct Models': top_20['correct_models'],
-            '오답 모델' if lang == 'ko' else 'Incorrect Models': top_20['incorrect_models']
-        })
-        
-        st.dataframe(
-            display_top_20.style.background_gradient(
-                subset=['오답률' if lang == 'ko' else 'Wrong Rate'],
-                cmap='Reds',
-                vmin=0,
-                vmax=100
-            ),
-            width='stretch',
-            height=600
-        )
         
         # ========================================
         # 섹션 7: 모든 모델이 틀린 문제 (완전 공통 오답)
