@@ -2479,6 +2479,41 @@ def main():
             - **{"일관성" if lang == 'ko' else "Consistency"}**: {"모든 모델이 비슷한 성능 패턴을 보이는지 확인하세요" if lang == 'ko' else "Check if all models show similar performance patterns"}
             - **{"특화 영역" if lang == 'ko' else "Specialization"}**: {"특정 모델이 특정 테스트에서 특히 우수한지 파악하세요" if lang == 'ko' else "Identify if specific models excel in certain tests"}
             """)
+            
+            # 모델별 테스트셋 성능 상세 표
+            st.markdown("---")
+            st.subheader("📋 " + ("모델별 테스트셋 성능 상세표" if lang == 'ko' else "Model × Test Set Performance Details"))
+            
+            # 모델별 테스트셋별 정답수, 총문제, 정확도, 추출실패 계산
+            detail_rows = []
+            for model in filtered_df['모델'].unique():
+                model_df = filtered_df[filtered_df['모델'] == model]
+                for test in model_df['테스트명'].unique():
+                    test_df = model_df[model_df['테스트명'] == test]
+                    total = len(test_df)
+                    correct = int(test_df['정답여부'].sum())
+                    acc = correct / total * 100 if total > 0 else 0
+                    extraction_fail = int(test_df['예측답'].isna().sum()) if '예측답' in test_df.columns else 0
+                    
+                    detail_rows.append({
+                        '모델' if lang == 'ko' else 'Model': model,
+                        '테스트셋' if lang == 'ko' else 'Test Set': test,
+                        '정답수' if lang == 'ko' else 'Correct': correct,
+                        '총문제' if lang == 'ko' else 'Total': total,
+                        '정확도(%)' if lang == 'ko' else 'Accuracy(%)': round(acc, 1),
+                        '추출실패' if lang == 'ko' else 'Parse Fail': extraction_fail
+                    })
+            
+            detail_df = pd.DataFrame(detail_rows)
+            acc_detail_col = '정확도(%)' if lang == 'ko' else 'Accuracy(%)'
+            
+            st.dataframe(
+                detail_df.style.background_gradient(
+                    subset=[acc_detail_col], cmap='RdYlGn', vmin=0, vmax=100
+                ),
+                width='stretch',
+                height=min(600, 50 + 35 * len(detail_df))
+            )
     
     # 탭 3: 응답시간 분석
     with tabs[2]:
@@ -2961,6 +2996,12 @@ def main():
                 '정답여부': ['sum', 'count', 'mean']
             }).reset_index()
             
+            # 과목별 소속 테스트셋 추출
+            subject_testsets = filtered_df.groupby('Subject')['테스트명'].apply(
+                lambda x: ', '.join(sorted(x.unique()))
+            ).reset_index()
+            subject_testsets.columns = ['Subject', '테스트셋']
+            
             # 컬럼명 언어별 설정
             if lang == 'ko':
                 subject_stats.columns = ['과목', '정답', '총문제', '정확도']
@@ -2976,6 +3017,18 @@ def main():
                 total_col = 'Total'
             
             subject_stats[acc_col] = subject_stats[acc_col] * 100
+            
+            # 테스트셋 출처 병합
+            merge_key = '과목' if lang == 'ko' else 'Subject'
+            subject_stats = subject_stats.merge(
+                subject_testsets, left_on=merge_key, right_on='Subject', how='left'
+            )
+            if merge_key != 'Subject' and 'Subject' in subject_stats.columns:
+                subject_stats = subject_stats.drop(columns=['Subject'])
+            testset_col = '테스트셋' if lang == 'ko' else 'Test Sets'
+            if '테스트셋' in subject_stats.columns and lang != 'ko':
+                subject_stats = subject_stats.rename(columns={'테스트셋': testset_col})
+            
             subject_stats = subject_stats.sort_values(acc_col, ascending=False)
             
             col1, col2 = st.columns([1, 2])
@@ -4435,251 +4488,6 @@ def main():
                 법령({law_gap_ratio:.1f}%)과 비법령({non_law_gap_ratio:.1f}%) 문제의 
                 공통 오답 비율이 비슷한 수준입니다.
                 """)
-        
-        # ========================================
-        # 섹션 11: 고오답률 & 고일관성 문제 분석 (NEW!)
-        # ========================================
-        st.markdown("---")
-        st.subheader("🎯 " + ("고오답률 & 고일관성 문제 분석" if lang == 'ko' else "High Incorrect Rate & High Consistency Analysis"))
-        
-        st.markdown("""
-        > 💡 **분석 목적**: 오답률 50% 이상이면서 일관성(같은 오답 선택률) 50% 이상인 문제는 
-        > 모델들이 **체계적으로 틀리는** 문제입니다. 이는 학습 데이터의 편향이나 지식 격차를 나타냅니다.
-        """ if lang == 'ko' else """
-        > 💡 **Purpose**: Problems with incorrect rate ≥50% AND consistency ≥50% indicate 
-        > **systematic errors** where models consistently choose the same wrong answer.
-        """)
-        
-        # 문제별 오답률과 일관성 계산
-        problem_stats = filtered_df.groupby('Question').agg({
-            '정답여부': ['sum', 'count', 'mean'],
-            '예측답': lambda x: x.value_counts().iloc[0] / len(x) if len(x) > 0 else 0  # 가장 많이 선택된 답의 비율
-        }).reset_index()
-        problem_stats.columns = ['Question', 'correct_count', 'total_count', 'accuracy', 'top_answer_ratio']
-        problem_stats['incorrect_rate'] = 1 - problem_stats['accuracy']
-        
-        # 오답인 경우의 일관성 (같은 오답을 선택한 비율)
-        consistency_list = []
-        for q in problem_stats['Question']:
-            q_df = filtered_df[filtered_df['Question'] == q]
-            wrong_df = q_df[q_df['정답여부'] == False]
-            if len(wrong_df) > 0:
-                # 가장 많이 선택된 오답의 비율
-                wrong_answer_counts = wrong_df['예측답'].value_counts()
-                if len(wrong_answer_counts) > 0:
-                    consistency = wrong_answer_counts.iloc[0] / len(wrong_df)
-                else:
-                    consistency = 0
-            else:
-                consistency = 0
-            consistency_list.append(consistency)
-        
-        problem_stats['wrong_consistency'] = consistency_list
-        
-        # 테스트명 매핑
-        test_mapping = filtered_df.groupby('Question')['테스트명'].first().to_dict()
-        problem_stats['테스트명'] = problem_stats['Question'].map(test_mapping)
-        
-        # 고오답률 & 고일관성 문제 필터링 (오답률 50%+, 일관성 50%+)
-        high_risk = problem_stats[
-            (problem_stats['incorrect_rate'] >= 0.5) & 
-            (problem_stats['wrong_consistency'] >= 0.5)
-        ].copy()
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric(
-                "전체 문제 수" if lang == 'ko' else "Total Problems",
-                f"{len(problem_stats):,}"
-            )
-        with col2:
-            st.metric(
-                "고위험 문제 수" if lang == 'ko' else "High-Risk Problems",
-                f"{len(high_risk):,}",
-                f"{len(high_risk)/len(problem_stats)*100:.1f}%" if len(problem_stats) > 0 else "0%"
-            )
-        with col3:
-            avg_consistency = high_risk['wrong_consistency'].mean() * 100 if len(high_risk) > 0 else 0
-            st.metric(
-                "평균 오답 일관성" if lang == 'ko' else "Avg Wrong Consistency",
-                f"{avg_consistency:.1f}%"
-            )
-        
-        # ----- 1. 오답률-일관성 구간별 문제 개수 히트맵 -----
-        st.markdown("#### " + ("📊 오답률-일관성 구간별 문제 분포 히트맵" if lang == 'ko' else "📊 Problem Distribution Heatmap by Incorrect Rate & Consistency"))
-        
-        # 5% 구간으로 binning (50~100%)
-        bins = [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.01]
-        bin_labels = ['50-55%', '55-60%', '60-65%', '65-70%', '70-75%', '75-80%', '80-85%', '85-90%', '90-95%', '95-100%']
-        
-        # 오답률 50% 이상, 일관성 50% 이상만 필터링
-        heatmap_data = problem_stats[
-            (problem_stats['incorrect_rate'] >= 0.5) & 
-            (problem_stats['wrong_consistency'] >= 0.5)
-        ].copy()
-        
-        if len(heatmap_data) > 0:
-            heatmap_data['incorrect_bin'] = pd.cut(
-                heatmap_data['incorrect_rate'], 
-                bins=bins, 
-                labels=bin_labels,
-                include_lowest=True
-            )
-            heatmap_data['consistency_bin'] = pd.cut(
-                heatmap_data['wrong_consistency'], 
-                bins=bins, 
-                labels=bin_labels,
-                include_lowest=True
-            )
-            
-            # 피벗 테이블 생성
-            heatmap_pivot = pd.crosstab(
-                heatmap_data['consistency_bin'], 
-                heatmap_data['incorrect_bin'],
-                dropna=False
-            )
-            
-            # 모든 구간이 있도록 reindex
-            heatmap_pivot = heatmap_pivot.reindex(index=bin_labels, columns=bin_labels, fill_value=0)
-            
-            # 히트맵 생성
-            fig_heatmap = go.Figure(data=go.Heatmap(
-                z=heatmap_pivot.values,
-                x=heatmap_pivot.columns.tolist(),
-                y=heatmap_pivot.index.tolist(),
-                colorscale='YlOrRd',
-                text=heatmap_pivot.values,
-                texttemplate='%{text}',
-                textfont={"size": annotation_size},
-                colorbar=dict(title="문제 수" if lang == 'ko' else "Count"),
-                hoverongaps=False
-            ))
-            
-            fig_heatmap.update_layout(
-                title='오답률 vs 일관성 구간별 문제 분포' if lang == 'ko' else 'Problem Distribution: Incorrect Rate vs Consistency',
-                xaxis_title='오답률 구간' if lang == 'ko' else 'Incorrect Rate Range',
-                yaxis_title='오답 일관성 구간' if lang == 'ko' else 'Wrong Consistency Range',
-                height=500,
-                xaxis=dict(side='bottom'),
-                yaxis=dict(autorange='reversed')  # 위에서 아래로
-            )
-            fig_heatmap.update_xaxes(tickfont=dict(size=annotation_size))
-            fig_heatmap.update_yaxes(tickfont=dict(size=annotation_size))
-            
-            st.plotly_chart(fig_heatmap, width='stretch')
-            
-            # 인사이트
-            max_cell = heatmap_pivot.max().max()
-            max_pos = heatmap_pivot.stack().idxmax()
-            if max_cell > 0:
-                st.info(f"💡 " + (f"가장 많은 문제가 집중된 구간: 오답률 **{max_pos[1]}**, 일관성 **{max_pos[0]}** ({int(max_cell)}개)" 
-                        if lang == 'ko' else f"Most concentrated: Incorrect Rate **{max_pos[1]}**, Consistency **{max_pos[0]}** ({int(max_cell)} problems)"))
-        else:
-            st.info("오답률 50% 이상이면서 일관성 50% 이상인 문제가 없습니다." if lang == 'ko' else "No problems with both incorrect rate ≥50% and consistency ≥50%.")
-        
-        st.markdown("---")
-        
-        # ----- 2. 테스트셋별 고위험 문제 개수 차트 -----
-        st.markdown("#### " + ("📊 테스트셋별 고위험 문제 분포" if lang == 'ko' else "📊 High-Risk Problems by Test Set"))
-        
-        if len(high_risk) > 0 and '테스트명' in high_risk.columns:
-            # 테스트셋별 고위험 문제 수
-            testset_risk = high_risk.groupby('테스트명').agg({
-                'Question': 'count',
-                'incorrect_rate': 'mean',
-                'wrong_consistency': 'mean'
-            }).reset_index()
-            testset_risk.columns = ['테스트명', '고위험 문제 수', '평균 오답률', '평균 일관성']
-            
-            # 전체 문제 수 대비 비율 계산
-            total_by_test = problem_stats.groupby('테스트명')['Question'].count().to_dict()
-            testset_risk['전체 문제 수'] = testset_risk['테스트명'].map(total_by_test)
-            testset_risk['고위험 비율'] = testset_risk['고위험 문제 수'] / testset_risk['전체 문제 수'] * 100
-            
-            testset_risk = testset_risk.sort_values('고위험 문제 수', ascending=False)
-            
-            # 막대 차트
-            fig_testset = go.Figure()
-            
-            # 고위험 문제 수 막대
-            fig_testset.add_trace(go.Bar(
-                name='고위험 문제 수' if lang == 'ko' else 'High-Risk Problems',
-                x=testset_risk['테스트명'],
-                y=testset_risk['고위험 문제 수'],
-                text=testset_risk['고위험 문제 수'],
-                textposition='outside',
-                textfont=dict(size=annotation_size),
-                marker_color='#e74c3c',
-                marker_line_color='black',
-                marker_line_width=1.5
-            ))
-            
-            fig_testset.update_layout(
-                title='테스트셋별 고위험 문제 수 (오답률≥50% & 일관성≥50%)' if lang == 'ko' else 'High-Risk Problems by Test Set (Incorrect≥50% & Consistency≥50%)',
-                xaxis_title='테스트셋' if lang == 'ko' else 'Test Set',
-                yaxis_title='문제 수' if lang == 'ko' else 'Problem Count',
-                height=450,
-                showlegend=False
-            )
-            fig_testset.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
-            fig_testset.update_yaxes(tickfont=dict(size=annotation_size))
-            
-            st.plotly_chart(fig_testset, width='stretch')
-            
-            # 비율 차트
-            st.markdown("##### " + ("고위험 문제 비율 (테스트셋 내)" if lang == 'ko' else "High-Risk Problem Ratio (within Test Set)"))
-            
-            fig_ratio = px.bar(
-                testset_risk.sort_values('고위험 비율', ascending=False),
-                x='테스트명',
-                y='고위험 비율',
-                text=[f"{x:.1f}%" for x in testset_risk.sort_values('고위험 비율', ascending=False)['고위험 비율']],
-                color='고위험 비율',
-                color_continuous_scale='Reds',
-                title='테스트셋별 고위험 문제 비율' if lang == 'ko' else 'High-Risk Problem Ratio by Test Set'
-            )
-            fig_ratio.update_traces(textposition='outside', textfont=dict(size=annotation_size), marker_line_color='black', marker_line_width=1)
-            fig_ratio.update_layout(
-                height=400,
-                showlegend=False,
-                yaxis_title='비율 (%)' if lang == 'ko' else 'Ratio (%)',
-                xaxis_title='테스트셋' if lang == 'ko' else 'Test Set',
-                coloraxis_showscale=False
-            )
-            fig_ratio.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
-            fig_ratio.update_yaxes(tickfont=dict(size=annotation_size))
-            
-            st.plotly_chart(fig_ratio, width='stretch')
-            
-            # 상세 테이블
-            with st.expander("📋 " + ("상세 데이터 보기" if lang == 'ko' else "View Detailed Data")):
-                display_testset = testset_risk.copy()
-                display_testset['평균 오답률'] = display_testset['평균 오답률'].apply(lambda x: f"{x*100:.1f}%")
-                display_testset['평균 일관성'] = display_testset['평균 일관성'].apply(lambda x: f"{x*100:.1f}%")
-                display_testset['고위험 비율'] = display_testset['고위험 비율'].apply(lambda x: f"{x:.1f}%")
-                
-                st.dataframe(
-                    display_testset,
-                    width='stretch',
-                    hide_index=True
-                )
-            
-            # 가장 위험한 테스트셋 강조
-            most_risky = testset_risk.iloc[0]
-            st.warning(f"""
-            ⚠️ **가장 주의가 필요한 테스트셋: {most_risky['테스트명']}**
-            - 고위험 문제 수: {int(most_risky['고위험 문제 수'])}개
-            - 평균 오답률: {most_risky['평균 오답률']*100:.1f}%
-            - 평균 오답 일관성: {most_risky['평균 일관성']*100:.1f}%
-            """ if lang == 'ko' else f"""
-            ⚠️ **Test set requiring most attention: {most_risky['테스트명']}**
-            - High-risk problems: {int(most_risky['고위험 문제 수'])}
-            - Avg incorrect rate: {most_risky['평균 오답률']*100:.1f}%
-            - Avg wrong consistency: {most_risky['평균 일관성']*100:.1f}%
-            """)
-        else:
-            st.info("고위험 문제가 없거나 테스트셋 정보가 없습니다." if lang == 'ko' else "No high-risk problems or test set info unavailable.")
-    
     # 탭 8: 난이도 분석
     with tabs[7]:
         st.header(f"📈 {t['difficulty_analysis']}")
