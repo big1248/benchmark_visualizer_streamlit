@@ -2843,6 +2843,111 @@ def main():
             - **{"일반 안전 교육" if lang == 'ko' else "General Safety Training"}**: {most_balanced['모델']} {"추천" if lang == 'ko' else "recommended"}
             - **{"종합 솔루션" if lang == 'ko' else "Comprehensive Solution"}**: {"법령/비법령 모두 높은 모델 선택" if lang == 'ko' else "Choose models high in both areas"}
             """)
+            
+            # ========================================
+            # 과목별 법령/비법령 분석
+            # ========================================
+            st.markdown("---")
+            st.subheader("📚 " + ("과목별 법령/비법령 문제 분포" if lang == 'ko' else "Law/Non-Law Distribution by Subject"))
+            
+            if 'Subject' in filtered_df.columns and 'law' in filtered_df.columns:
+                # 과목별 법령/비법령 문제 수 및 정확도 계산
+                subjects = filtered_df['Subject'].dropna().unique()
+                subject_law_data = []
+                
+                for subj in subjects:
+                    subj_df = filtered_df[filtered_df['Subject'] == subj]
+                    # 모델 중복 제거: 문제 단위로 계산
+                    subj_questions = subj_df.drop_duplicates(subset=['Question'])
+                    
+                    law_q = len(subj_questions[subj_questions['law'] == 'O'])
+                    non_law_q = len(subj_questions[subj_questions['law'] != 'O'])
+                    total_q = law_q + non_law_q
+                    law_ratio = (law_q / total_q * 100) if total_q > 0 else 0
+                    
+                    # 정확도 (전체 모델 평가 기준)
+                    law_acc = subj_df[subj_df['law'] == 'O']['정답여부'].mean() * 100 if law_q > 0 else 0
+                    non_law_acc = subj_df[subj_df['law'] != 'O']['정답여부'].mean() * 100 if non_law_q > 0 else 0
+                    
+                    subject_law_data.append({
+                        '과목' if lang == 'ko' else 'Subject': subj,
+                        '총 문제' if lang == 'ko' else 'Total': total_q,
+                        '법령 문제' if lang == 'ko' else 'Law': law_q,
+                        '비법령 문제' if lang == 'ko' else 'Non-Law': non_law_q,
+                        '법령 비율(%)' if lang == 'ko' else 'Law Ratio(%)': round(law_ratio, 1),
+                        '법령 정확도(%)' if lang == 'ko' else 'Law Acc(%)': round(law_acc, 1),
+                        '비법령 정확도(%)' if lang == 'ko' else 'Non-Law Acc(%)': round(non_law_acc, 1),
+                        '정확도 차이(%p)' if lang == 'ko' else 'Diff(%p)': round(non_law_acc - law_acc, 1)
+                    })
+                
+                subj_law_df = pd.DataFrame(subject_law_data)
+                
+                # 총 문제 수 기준 내림차순 정렬
+                total_col = '총 문제' if lang == 'ko' else 'Total'
+                subj_law_df = subj_law_df.sort_values(total_col, ascending=False)
+                
+                # 표 표시
+                ratio_col = '법령 비율(%)' if lang == 'ko' else 'Law Ratio(%)'
+                law_acc_col = '법령 정확도(%)' if lang == 'ko' else 'Law Acc(%)'
+                nonlaw_acc_col = '비법령 정확도(%)' if lang == 'ko' else 'Non-Law Acc(%)'
+                
+                st.dataframe(
+                    subj_law_df.style.background_gradient(
+                        subset=[ratio_col], cmap='Blues', vmin=0, vmax=100
+                    ).background_gradient(
+                        subset=[law_acc_col, nonlaw_acc_col], cmap='RdYlGn', vmin=0, vmax=100
+                    ),
+                    width='stretch',
+                    height=min(400, 50 + 35 * len(subj_law_df))
+                )
+                
+                # 과목별 법령 비율 차트
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    fig = px.bar(
+                        subj_law_df.sort_values(ratio_col, ascending=True),
+                        y='과목' if lang == 'ko' else 'Subject',
+                        x=ratio_col,
+                        orientation='h',
+                        title='과목별 법령 문제 비율' if lang == 'ko' else 'Law Problem Ratio by Subject',
+                        text=ratio_col,
+                        color=ratio_col,
+                        color_continuous_scale='Blues',
+                        range_color=[0, 100]
+                    )
+                    fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+                    fig.update_layout(height=max(400, 30 * len(subj_law_df)), showlegend=False)
+                    st.plotly_chart(fig, width='stretch')
+                
+                with col2:
+                    # 과목별 법령 vs 비법령 정확도 비교
+                    subj_acc = subj_law_df[subj_law_df[total_col] >= 5].copy()  # 5문제 이상만
+                    if len(subj_acc) > 0:
+                        fig = go.Figure()
+                        fig.add_trace(go.Bar(
+                            name='법령' if lang == 'ko' else 'Law',
+                            y=subj_acc['과목' if lang == 'ko' else 'Subject'],
+                            x=subj_acc[law_acc_col],
+                            orientation='h',
+                            marker_color='skyblue'
+                        ))
+                        fig.add_trace(go.Bar(
+                            name='비법령' if lang == 'ko' else 'Non-Law',
+                            y=subj_acc['과목' if lang == 'ko' else 'Subject'],
+                            x=subj_acc[nonlaw_acc_col],
+                            orientation='h',
+                            marker_color='lightcoral'
+                        ))
+                        fig.update_layout(
+                            barmode='group',
+                            title='과목별 법령/비법령 정확도' if lang == 'ko' else 'Law vs Non-Law Accuracy by Subject',
+                            height=max(400, 30 * len(subj_acc)),
+                            xaxis_title='정확도 (%)' if lang == 'ko' else 'Accuracy (%)'
+                        )
+                        st.plotly_chart(fig, width='stretch')
+            else:
+                st.info("과목(Subject) 또는 법령(law) 데이터가 없습니다." if lang == 'ko' else "Subject or law data not available.")
     
     # 탭 5: 과목별 분석
     with tabs[4]:
@@ -3879,75 +3984,6 @@ def main():
                     st.info("50-99% 일관성 패턴이 발견되지 않았습니다.")
         else:
             st.warning("일관된 오답 선택 패턴이 발견되지 않았습니다. (오답률 50% 이상 & 일관성 50% 이상 문제 없음)")
-        
-        # 섹션 3: 프롬프팅 방식별 공통 오답 비교
-        # ========================================
-        st.markdown("---")
-        st.subheader("📋 " + ("프롬프팅 방식별 공통 오답 분석" if lang == 'ko' else "Common Wrong Answer by Prompting"))
-        
-        if '프롬프팅' in filtered_df.columns and filtered_df['프롬프팅'].nunique() > 1:
-            st.info("""
-            💡 **논문 방법론**: 특정 프롬프팅 방식에서 모델들이 일관되게 틀리는 문제를 식별
-            """)
-            
-            prompting_analysis = []
-            
-            for prompting in filtered_df['프롬프팅'].unique():
-                prompt_df = filtered_df[filtered_df['프롬프팅'] == prompting]
-                prompt_problems = prompt_df.groupby('Question').agg({'정답여부': ['sum', 'count']}).reset_index()
-                prompt_problems.columns = ['Question', 'correct_count', 'total_count']
-                all_wrong_in_prompt = len(prompt_problems[prompt_problems['correct_count'] == 0])
-                avg_acc = prompt_df['정답여부'].mean() * 100
-                
-                prompting_analysis.append({
-                    '프롬프팅': prompting,
-                    '전체_문제수': prompt_df['Question'].nunique(),
-                    '완전_지식격차': all_wrong_in_prompt,
-                    '평균_정확도': avg_acc,
-                    '지식격차_비율': (all_wrong_in_prompt / prompt_df['Question'].nunique() * 100) if prompt_df['Question'].nunique() > 0 else 0
-                })
-            
-            prompt_comp_df = pd.DataFrame(prompting_analysis).sort_values('완전_지식격차', ascending=False)
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                fig = px.bar(
-                    prompt_comp_df,
-                    x='프롬프팅',
-                    y='완전_지식격차',
-                    title='프롬프팅 방식별 완전 공통 오답',
-                    text='완전_지식격차',
-                    color='완전_지식격차',
-                    color_continuous_scale='Reds'
-                )
-                fig.update_traces(textposition='outside', marker_line_color='black', marker_line_width=1.5)
-                fig.update_layout(height=400)
-                st.plotly_chart(fig, width='stretch')
-            
-            with col2:
-                fig = px.scatter(
-                    prompt_comp_df,
-                    x='평균_정확도',
-                    y='지식격차_비율',
-                    size='전체_문제수',
-                    text='프롬프팅',
-                    title='정확도 vs 지식격차 비율',
-                    labels={'평균_정확도': '평균 정확도 (%)', '지식격차_비율': '지식격차 비율 (%)'}
-                )
-                fig.update_traces(textposition='top center', marker=dict(line=dict(width=2, color='black')))
-                fig.update_layout(height=400)
-                st.plotly_chart(fig, width='stretch')
-            
-            st.dataframe(
-                prompt_comp_df.style.format({
-                    '평균_정확도': '{:.2f}%',
-                    '지식격차_비율': '{:.2f}%'
-                }).background_gradient(subset=['완전_지식격차'], cmap='Reds'),
-                width='stretch'
-            )
-        else:
-            st.info("프롬프팅 방식이 1개만 선택되어 비교 불가")
         
         # ========================================
         # 섹션 4: 모델 간 오답 일치도 매트릭스
