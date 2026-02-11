@@ -3192,8 +3192,10 @@ def main():
     
     # 탭 7: 심층 오답 분석 (Complete Enhanced Version)
     with tabs[6]:
-        st.header(f"🔬 {'심층 오답 분석' if lang == 'ko' else 'Deep Incorrect Analysis'}")
+        try:
+            st.header(f"🔬 {'심층 오답 분석' if lang == 'ko' else 'Deep Incorrect Analysis'}")
         
+<<<<<<< HEAD
         st.markdown("""
         > **논문 기반 심층 분석**: 이 탭은 학술 논문의 "공통 오답 패턴(Common Wrong Answer)" 분석 방법론을 적용합니다.
         > 단순히 오답률이 높은 문제를 넘어, **모델들이 일관되게 같은 오답을 선택하는 패턴**을 식별하여 
@@ -3361,296 +3363,476 @@ def main():
         st.subheader("🎯 " + ("일관된 오답 선택 패턴 (공통 오답 핵심 지표)" if lang == 'ko' else "Consistent Incorrect Answer Pattern"))
         
         with st.expander("📖 " + ("공통 오답이란? (계산 방식 설명)" if lang == 'ko' else "What is Common Wrong Answer?")):
+=======
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
             st.markdown("""
-            ### 🔍 계산 방식
-            
-            **전제 조건: 오답률 50% 이상 문제만 분석**
-            ```
-            이유:
-            - 1-2개 모델만 틀린 문제 → 우연일 가능성
-            - 50% 이상 틀린 문제 → 의미 있는 패턴
-            
-            예시:
-            ❌ 제외: 10개 중 1개만 틀림 (10%) → 일관성 의미 없음
-            ❌ 제외: 10개 중 3개만 틀림 (30%) → 너무 적음
-            ✅ 분석: 10개 중 5개 틀림 (50%) → 의미 있는 패턴
-            ✅ 분석: 10개 중 8개 틀림 (80%) → 중요한 패턴
-            ```
-            
-            **1단계: 오답 수집 (오답률 ≥50% 문제만)**
-            ```
-            문제 Q1 (오답률 80%):
-            - GPT-4o: 3번 선택 (정답: 2번) ❌
-            - Claude: 3번 선택 (정답: 2번) ❌
-            - Gemini: 4번 선택 (정답: 2번) ❌
-            - EXAONE: 3번 선택 (정답: 2번) ❌
-            - Llama: 2번 선택 (정답: 2번) ✅
-            
-            → 오답 목록: [3, 3, 4, 3]
-            → 오답률: 4/5 = 80% (✅ 분석 대상)
-            ```
-            
-            **2단계: 가장 많이 선택된 오답 찾기**
-            ```
-            오답 통계:
-            - 3번: 3회 ⭐ (가장 많음)
-            - 4번: 1회
-            
-            → 공통 오답: 3번
-            ```
-            
-            **3단계: 일관성 계산**
-            ```
-            일관성 = (가장 많은 오답 횟수) / (전체 오답 횟수)
-                  = 3회 / 4회
-                  = 75%
-            
-            → 75% 일관성 (4개 중 3개가 같은 답 선택)
-            ```
-            
-            **⚠️ nan (답안 추출 실패) 처리**
-            ```
-            예시 1: nan이 있는 경우
-            
-            문제 Q2 (오답률 50%, 평가 모델 12개):
-            - 전체 오답: 6개
-            - 공통 오답 3번: 4개
-            - nan (추출 실패): 2개
-            
-            일관성 계산:
-            = 4개 / 6개 = 66.7%
-            
-            의미:
-            "6개 오답 중 4개가 3번 선택 (66.7%)"
-            "나머지 2개는 확인 불가 (nan)"
-            
-            표시: 공통 오답 3.0 (4/6) - 66.7% 일관성
-            
-            ---
-            
-            예시 2: nan이 없는 경우
-            
-            문제 Q3 (오답률 50%, 평가 모델 12개):
-            - 전체 오답: 6개
-            - 공통 오답 3번: 6개
-            - nan: 0개
-            
-            일관성 계산:
-            = 6개 / 6개 = 100%
-            
-            의미:
-            "6개 오답 모두 3번 선택 (100%)"
-            
-            표시: 공통 오답 3.0 (6/6) - 100% 일관성
-            ```
-            
-            **📌 중요 원칙**:
-            ```
-            분자 (공통 오답 수):
-            → 추출 가능한 오답만 카운트 (nan 제외)
-            
-            분모 (전체 오답 수):
-            → 오답률로 계산된 전체 오답 (nan 포함)
-            
-            이유:
-            - nan은 "무엇을 선택했는지 모름"
-            - 분모에는 포함 (전체 오답 수)
-            - 분자에는 제외 (확인 불가)
-            → 일관성이 낮아짐 (데이터 품질 반영)
-            ```
-            
-            **4단계: 일관성 50% 이상만 표시**
-            ```
-            ✅ 75% 일관성 → 표시 (의미 있는 패턴)
-            ✅ 100% 일관성 → 표시 (완벽한 패턴)
-            ❌ 40% 일관성 → 제외 (우연일 가능성)
-            ```
-            
-            ### 💡 왜 오답률 50% 이상만?
-            
-            **문제 사례**:
-            ```
-            문제 A (오답률 10%):
-            - 10개 모델 중 1개만 틀림
-            - 오답: [3]
-            - 일관성: 100% ❌ 의미 없음!
-            
-            문제 B (오답률 80%):
-            - 10개 모델 중 8개 틀림
-            - 오답: [3, 3, 3, 3, 3, 3, 3, 4]
-            - 일관성: 87.5% ✅ 의미 있음!
-            ```
-            
-            **결론**: 
-            - **무작위 오답**: 각 모델이 다른 답 선택 → 우연
-            - **일관된 오답**: 여러 모델이 같은 답 선택 → 체계적 오해!
-            
-            일관된 오답은 특정 개념에 대한 근본적인 오해를 의미합니다.
+            > **논문 기반 심층 분석**: 이 탭은 학술 논문의 "공통 오답 패턴(Common Wrong Answer)" 분석 방법론을 적용합니다.
+            > 단순히 오답률이 높은 문제를 넘어, **모델들이 일관되게 같은 오답을 선택하는 패턴**을 식별하여 
+            > LLM의 근본적인 지식 문제를 파악합니다.
             """)
         
-        st.info("""
-        💡 **핵심 인사이트**: 모델들이 단순히 틀리는 것이 아니라, **같은 오답을 일관되게 선택**하는 경우 
-        이는 해당 지식 영역에 대한 근본적인 이해 부족을 의미합니다. (논문 방법론 적용)
+            # 기본 오답 분석 데이터 준비
+            # 문제별 오답 통계 계산
+            # 🔧 수정: 고유 식별자 생성하여 중복 방지
+            # Question만으로는 중복 가능 (여러 테스트에서 같은 문제 번호)
+            # → Test Name + Year + Session + Question으로 고유 식별자 생성
         
-        ⚠️ **중요**: 오답률 50% 이상 문제만 분석합니다 (소수 모델 오답은 우연일 가능성)
-        """)
+            # 고유 식별자 생성
+            if 'Test Name' in filtered_df.columns:
+                filtered_df['unique_question_id'] = (
+                    filtered_df['Test Name'].astype(str) + '_' +
+                    filtered_df['Year'].astype(str) + '_' +
+                    filtered_df['Session'].astype(str) + '_' +
+                    filtered_df['Question'].astype(str)
+                )
+            else:
+                filtered_df['unique_question_id'] = filtered_df['Question'].astype(str)
         
-        # 일관된 오답 패턴 계산
-        consistent_wrong_patterns = []
-        extraction_failures = []  # 답안 추출 실패 추적
+            # 고유 식별자로 그룹화
+            problem_analysis = filtered_df.groupby('unique_question_id').agg({
+                '정답여부': ['sum', 'count', 'mean']
+            }).reset_index()
+            problem_analysis.columns = ['unique_question_id', 'correct_count', 'total_count', 'correct_rate']
+            problem_analysis['incorrect_rate'] = 1 - problem_analysis['correct_rate']
+            problem_analysis['incorrect_count'] = problem_analysis['total_count'] - problem_analysis['correct_count']
         
-        for idx, row in problem_analysis.iterrows():
-            # ⭐ 핵심 변경: 오답률 50% 이상 & 최소 2개 이상 오답인 문제만 분석
-            if row['incorrect_rate'] >= 0.5 and row['incorrect_count'] >= 2:
-                selected = row['selected_answers']
-                correct = row['CorrectAnswer']
+            # Question 컬럼도 추가 (표시용)
+            questions = []
+            for uid in problem_analysis['unique_question_id']:
+                matching = filtered_df[filtered_df['unique_question_id'] == uid]
+                if len(matching) > 0:
+                    questions.append(matching.iloc[0]['Question'])
+                else:
+                    questions.append(uid)
+            problem_analysis['Question'] = questions
+        
+            # 문제 식별자 및 메타데이터 추가
+            problem_ids = []
+            subjects = []
+            years = []
+            correct_answers = []
+            law_statuses = []
+        
+            for uid in problem_analysis['unique_question_id']:
+                matching_rows = filtered_df[filtered_df['unique_question_id'] == uid]
+                if len(matching_rows) > 0:
+                    row = matching_rows.iloc[0]
+                    problem_id = create_problem_identifier(row, lang)
+                    problem_ids.append(problem_id)
+                    subjects.append(row.get('Subject', 'Unknown'))
+                    years.append(row.get('Year', 'Unknown'))
+                    correct_answers.append(row.get('Answer', 'Unknown'))
+                    law_statuses.append(row.get('law', 'Unknown'))
+                else:
+                    problem_ids.append("Unknown")
+                    subjects.append("Unknown")
+                    years.append("Unknown")
+                    correct_answers.append("Unknown")
+                    law_statuses.append("Unknown")
+        
+            problem_analysis['problem_id'] = problem_ids
+            problem_analysis['Subject'] = subjects
+            problem_analysis['Year'] = years
+            problem_analysis['CorrectAnswer'] = correct_answers
+            problem_analysis['law_status'] = law_statuses
+        
+            # 모델별 정오답 및 선택한 답 정보 추가
+            correct_models_list = []
+            incorrect_models_list = []
+            selected_answers_dict = []
+        
+            for uid in problem_analysis['unique_question_id']:
+                q_df = filtered_df[filtered_df['unique_question_id'] == uid]
+                correct_models = q_df[q_df['정답여부'] == True]['모델'].unique().tolist()
+                incorrect_models = q_df[q_df['정답여부'] == False]['모델'].unique().tolist()
+            
+                correct_models_list.append('✓ ' + ', '.join(sorted(correct_models)) if correct_models else '-')
+                incorrect_models_list.append('✗ ' + ', '.join(sorted(incorrect_models)) if incorrect_models else '-')
+            
+                # 각 모델이 선택한 답 수집 (iterrows 대신 zip 사용)
+                answers_by_model = dict(zip(q_df['모델'].values, q_df['예측답'].fillna('N/A').values))
+                selected_answers_dict.append(answers_by_model)
+        
+            problem_analysis['correct_models'] = correct_models_list
+            problem_analysis['incorrect_models'] = incorrect_models_list
+            problem_analysis['selected_answers'] = selected_answers_dict
+        
+            # 오답률 순으로 정렬
+            problem_analysis = problem_analysis.sort_values(
+                by=['incorrect_rate', 'problem_id'],
+                ascending=[False, True]
+            )
+        
+            # ========================================
+            # 섹션 1: 개요 및 주요 메트릭
+            # ========================================
+            st.markdown("---")
+            st.subheader("📊 " + ("오답 분석 개요" if lang == 'ko' else "Incorrect Analysis Overview"))
+        
+            col1, col2, col3, col4 = st.columns(4)
+        
+            with col1:
+                # 🔧 수정: testsets 기준으로 계산 (전체 요약과 동일)
+                total_problems_testset = 0
+                if selected_tests:
+                    for test_name in selected_tests:
+                        if test_name in testsets:
+                            total_problems_testset += len(testsets[test_name])
+            
+                # 백업: problem_analysis 기준
+                total_problems_analysis = len(problem_analysis)
+            
+                # 우선순위: testsets > analysis
+                display_total = total_problems_testset if total_problems_testset > 0 else total_problems_analysis
+            
+                st.metric(
+                    "분석 문제 수" if lang == 'ko' else "Total Problems",
+                    f"{display_total:,}",
+                    help="테스트셋 기준 총 문제 수"
+                )
+        
+            with col2:
+                all_wrong = len(problem_analysis[problem_analysis['correct_count'] == 0])
+                st.metric(
+                    "완전 공통 오답" if lang == 'ko' else "Complete Common Wrong Answers",
+                    f"{all_wrong}",
+                    help="모든 모델이 틀린 문제"
+                )
+        
+            with col3:
+                most_wrong = len(problem_analysis[problem_analysis['incorrect_rate'] >= 0.5])
+                st.metric(
+                    "주요 공통 오답" if lang == 'ko' else "Major Common Wrong Answers",
+                    f"{most_wrong}",
+                    help="50% 이상의 모델이 틀린 문제"
+                )
+        
+            with col4:
+                avg_incorrect_rate = problem_analysis['incorrect_rate'].mean() * 100
+                st.metric(
+                    "평균 오답률" if lang == 'ko' else "Avg Incorrect Rate",
+                    f"{avg_incorrect_rate:.1f}%"
+                )
+        
+            # ========================================
+            # 섹션 2: 일관된 오답 선택 패턴 분석 (핵심!)
+            # ========================================
+            st.markdown("---")
+            st.subheader("🎯 " + ("일관된 오답 선택 패턴 (공통 오답 핵심 지표)" if lang == 'ko' else "Consistent Incorrect Answer Pattern"))
+        
+            with st.expander("📖 " + ("공통 오답이란? (계산 방식 설명)" if lang == 'ko' else "What is Common Wrong Answer?")):
+                st.markdown("""
+                ### 🔍 계산 방식
+            
+                **전제 조건: 오답률 50% 이상 문제만 분석**
+                ```
+                이유:
+                - 1-2개 모델만 틀린 문제 → 우연일 가능성
+                - 50% 이상 틀린 문제 → 의미 있는 패턴
+            
+                예시:
+                ❌ 제외: 10개 중 1개만 틀림 (10%) → 일관성 의미 없음
+                ❌ 제외: 10개 중 3개만 틀림 (30%) → 너무 적음
+                ✅ 분석: 10개 중 5개 틀림 (50%) → 의미 있는 패턴
+                ✅ 분석: 10개 중 8개 틀림 (80%) → 중요한 패턴
+                ```
+            
+                **1단계: 오답 수집 (오답률 ≥50% 문제만)**
+                ```
+                문제 Q1 (오답률 80%):
+                - GPT-4o: 3번 선택 (정답: 2번) ❌
+                - Claude: 3번 선택 (정답: 2번) ❌
+                - Gemini: 4번 선택 (정답: 2번) ❌
+                - EXAONE: 3번 선택 (정답: 2번) ❌
+                - Llama: 2번 선택 (정답: 2번) ✅
+            
+                → 오답 목록: [3, 3, 4, 3]
+                → 오답률: 4/5 = 80% (✅ 분석 대상)
+                ```
+            
+                **2단계: 가장 많이 선택된 오답 찾기**
+                ```
+                오답 통계:
+                - 3번: 3회 ⭐ (가장 많음)
+                - 4번: 1회
+            
+                → 공통 오답: 3번
+                ```
+            
+                **3단계: 일관성 계산**
+                ```
+                일관성 = (가장 많은 오답 횟수) / (전체 오답 횟수)
+                      = 3회 / 4회
+                      = 75%
+            
+                → 75% 일관성 (4개 중 3개가 같은 답 선택)
+                ```
+            
+                **⚠️ nan (답안 추출 실패) 처리**
+                ```
+                예시 1: nan이 있는 경우
+            
+                문제 Q2 (오답률 50%, 평가 모델 12개):
+                - 전체 오답: 6개
+                - 공통 오답 3번: 4개
+                - nan (추출 실패): 2개
+            
+                일관성 계산:
+                = 4개 / 6개 = 66.7%
+            
+                의미:
+                "6개 오답 중 4개가 3번 선택 (66.7%)"
+                "나머지 2개는 확인 불가 (nan)"
+            
+                표시: 공통 오답 3.0 (4/6) - 66.7% 일관성
+            
+                ---
+            
+                예시 2: nan이 없는 경우
+            
+                문제 Q3 (오답률 50%, 평가 모델 12개):
+                - 전체 오답: 6개
+                - 공통 오답 3번: 6개
+                - nan: 0개
+            
+                일관성 계산:
+                = 6개 / 6개 = 100%
+            
+                의미:
+                "6개 오답 모두 3번 선택 (100%)"
+            
+                표시: 공통 오답 3.0 (6/6) - 100% 일관성
+                ```
+            
+                **📌 중요 원칙**:
+                ```
+                분자 (공통 오답 수):
+                → 추출 가능한 오답만 카운트 (nan 제외)
+            
+                분모 (전체 오답 수):
+                → 오답률로 계산된 전체 오답 (nan 포함)
+            
+                이유:
+                - nan은 "무엇을 선택했는지 모름"
+                - 분모에는 포함 (전체 오답 수)
+                - 분자에는 제외 (확인 불가)
+                → 일관성이 낮아짐 (데이터 품질 반영)
+                ```
+            
+                **4단계: 일관성 50% 이상만 표시**
+                ```
+                ✅ 75% 일관성 → 표시 (의미 있는 패턴)
+                ✅ 100% 일관성 → 표시 (완벽한 패턴)
+                ❌ 40% 일관성 → 제외 (우연일 가능성)
+                ```
+            
+                ### 💡 왜 오답률 50% 이상만?
+            
+                **문제 사례**:
+                ```
+                문제 A (오답률 10%):
+                - 10개 모델 중 1개만 틀림
+                - 오답: [3]
+                - 일관성: 100% ❌ 의미 없음!
+            
+                문제 B (오답률 80%):
+                - 10개 모델 중 8개 틀림
+                - 오답: [3, 3, 3, 3, 3, 3, 3, 4]
+                - 일관성: 87.5% ✅ 의미 있음!
+                ```
+            
+                **결론**: 
+                - **무작위 오답**: 각 모델이 다른 답 선택 → 우연
+                - **일관된 오답**: 여러 모델이 같은 답 선택 → 체계적 오해!
+            
+                일관된 오답은 특정 개념에 대한 근본적인 오해를 의미합니다.
+                """)
+        
+            st.info("""
+            💡 **핵심 인사이트**: 모델들이 단순히 틀리는 것이 아니라, **같은 오답을 일관되게 선택**하는 경우 
+            이는 해당 지식 영역에 대한 근본적인 이해 부족을 의미합니다. (논문 방법론 적용)
+        
+            ⚠️ **중요**: 오답률 50% 이상 문제만 분석합니다 (소수 모델 오답은 우연일 가능성)
+            """)
+        
+            # 일관된 오답 패턴 계산
+            consistent_wrong_patterns = []
+            extraction_failures = []  # 답안 추출 실패 추적
+        
+            for idx, row in problem_analysis.iterrows():
+                # ⭐ 핵심 변경: 오답률 50% 이상 & 최소 2개 이상 오답인 문제만 분석
+                if row['incorrect_rate'] >= 0.5 and row['incorrect_count'] >= 2:
+                    selected = row['selected_answers']
+                    correct = row['CorrectAnswer']
                 
-                # 전체 평가 모델 수
-                total_models = row['total_count']
+                    # 전체 평가 모델 수
+                    total_models = row['total_count']
                 
-                # 🔍 올바른 전체 오답 모델 수 계산
-                total_incorrect_models = row['incorrect_count']  # problem_analysis에서 계산된 값 사용
+                    # 🔍 올바른 전체 오답 모델 수 계산
+                    total_incorrect_models = row['incorrect_count']  # problem_analysis에서 계산된 값 사용
                 
-                # 답안 추출 통계
-                valid_answers = 0
-                nan_count = 0
-                empty_count = 0
+                    # 답안 추출 통계
+                    valid_answers = 0
+                    nan_count = 0
+                    empty_count = 0
                 
-                # 오답을 선택한 모델들의 답변 수집
-                wrong_answers = []
-                wrong_answer_models = []  # 오답 모델 추적
+                    # 오답을 선택한 모델들의 답변 수집
+                    wrong_answers = []
+                    wrong_answer_models = []  # 오답 모델 추적
                 
-                for model, answer in selected.items():
-                    if pd.isna(answer):
-                        nan_count += 1
-                    elif str(answer).strip() == '':
-                        empty_count += 1
-                    elif str(answer) != str(correct):
-                        # 정답이 아니면 오답
-                        wrong_answers.append(str(answer).strip())
-                        wrong_answer_models.append(model)
-                        valid_answers += 1
-                    else:
-                        valid_answers += 1
+                    for model, answer in selected.items():
+                        if pd.isna(answer):
+                            nan_count += 1
+                        elif str(answer).strip() == '':
+                            empty_count += 1
+                        elif str(answer) != str(correct):
+                            # 정답이 아니면 오답
+                            wrong_answers.append(str(answer).strip())
+                            wrong_answer_models.append(model)
+                            valid_answers += 1
+                        else:
+                            valid_answers += 1
                 
-                # 🔍 추출 실패 기록
-                if nan_count > 0 or empty_count > 0:
-                    extraction_failures.append({
-                        'problem_id': row['problem_id'],
-                        'total_models': total_models,
-                        'valid_answers': valid_answers,
-                        'nan_count': nan_count,
-                        'empty_count': empty_count,
-                        'extraction_rate': (valid_answers / total_models * 100) if total_models > 0 else 0
-                    })
-                
-                if wrong_answers and len(wrong_answers) >= 2:
-                    from collections import Counter
-                    answer_counts = Counter(wrong_answers)
-                    most_common_wrong, count = answer_counts.most_common(1)[0]
-                    
-                    # ⭐⭐⭐ 핵심 수정: 올바른 일관성 계산
-                    # 일관성 = (가장 많이 선택된 오답 수) / (전체 오답 모델 수)
-                    # 
-                    # 중요: nan 처리
-                    # - 분자(count): nan 제외 (추출 가능한 것만)
-                    # - 분모(total_incorrect_models): nan 포함 (전체 오답)
-                    # 
-                    # 예시: 전체 오답 6개, 공통 오답 4개, nan 2개
-                    # → 일관성 = 4/6 = 66.7%
-                    # → 의미: "6개 오답 중 4개가 동일 답 선택, 2개는 확인 불가"
-                    consistency_ratio = count / total_incorrect_models if total_incorrect_models > 0 else 0
-                    
-                    # 🔍 검증 1: 추출된 오답 수 vs 기록된 오답 수
-                    if len(wrong_answers) != total_incorrect_models:
-                        st.sidebar.warning(
-                            f"⚠️ 문제 {row['problem_id']}: 오답 수 불일치\n"
-                            f"   추출: {len(wrong_answers)}개, 기록: {total_incorrect_models}개\n"
-                            f"   → nan/빈답안: {nan_count + empty_count}개"
-                        )
-                    
-                    # 🔍 검증 2: 일관성 비율이 1.0 초과하면 오류
-                    if consistency_ratio > 1.0:
-                        st.sidebar.error(
-                            f"❌ 문제 {row['problem_id']}: 일관성 계산 오류!\n"
-                            f"   공통 오답: {count}개, 전체 오답: {total_incorrect_models}개\n"
-                            f"   → {count}/{total_incorrect_models} = {consistency_ratio:.2%}"
-                        )
-                        consistency_ratio = 1.0  # 최대값으로 보정
-                    
-                    if consistency_ratio >= 0.5:
-                        models_selected_this = [m for m, a in selected.items() 
-                                              if pd.notna(a) and str(a).strip() == most_common_wrong]
-                        
-                        consistent_wrong_patterns.append({
+                    # 🔍 추출 실패 기록
+                    if nan_count > 0 or empty_count > 0:
+                        extraction_failures.append({
                             'problem_id': row['problem_id'],
-                            'Question': row['Question'],
-                            'Subject': row['Subject'],
-                            'Year': row['Year'],
-                            'correct_answer': str(correct).strip(),
-                            'common_wrong_answer': most_common_wrong,
-                            'wrong_answer_count': count,  # 공통 오답 수
-                            'total_wrong': total_incorrect_models,  # ⭐ 전체 오답 모델 수 (올바른 값)
-                            'consistency_ratio': consistency_ratio,  # ⭐ 올바른 일관성
-                            'models_with_this_wrong': ', '.join(models_selected_this),
-                            'incorrect_rate': row['incorrect_rate'],
                             'total_models': total_models,
                             'valid_answers': valid_answers,
                             'nan_count': nan_count,
                             'empty_count': empty_count,
-                            'extracted_wrong_count': len(wrong_answers)  # 실제 추출된 오답 수
+                            'extraction_rate': (valid_answers / total_models * 100) if total_models > 0 else 0
                         })
-        
-        # 🚨 답안 추출 실패 통계 표시
-        if extraction_failures:
-            with st.expander(f"⚠️ 답안 추출 실패 통계 ({len(extraction_failures)}개 문제)"):
-                failure_df = pd.DataFrame(extraction_failures)
-                failure_df = failure_df.sort_values('nan_count', ascending=False)
                 
+                    if wrong_answers and len(wrong_answers) >= 2:
+                        from collections import Counter
+                        answer_counts = Counter(wrong_answers)
+                        most_common_wrong, count = answer_counts.most_common(1)[0]
+                    
+                        # ⭐⭐⭐ 핵심 수정: 올바른 일관성 계산
+                        # 일관성 = (가장 많이 선택된 오답 수) / (전체 오답 모델 수)
+                        # 
+                        # 중요: nan 처리
+                        # - 분자(count): nan 제외 (추출 가능한 것만)
+                        # - 분모(total_incorrect_models): nan 포함 (전체 오답)
+                        # 
+                        # 예시: 전체 오답 6개, 공통 오답 4개, nan 2개
+                        # → 일관성 = 4/6 = 66.7%
+                        # → 의미: "6개 오답 중 4개가 동일 답 선택, 2개는 확인 불가"
+                        consistency_ratio = count / total_incorrect_models if total_incorrect_models > 0 else 0
+                    
+                        # 🔍 검증 1: 추출된 오답 수 vs 기록된 오답 수
+                        if len(wrong_answers) != total_incorrect_models:
+                            st.sidebar.warning(
+                                f"⚠️ 문제 {row['problem_id']}: 오답 수 불일치\n"
+                                f"   추출: {len(wrong_answers)}개, 기록: {total_incorrect_models}개\n"
+                                f"   → nan/빈답안: {nan_count + empty_count}개"
+                            )
+                    
+                        # 🔍 검증 2: 일관성 비율이 1.0 초과하면 오류
+                        if consistency_ratio > 1.0:
+                            st.sidebar.error(
+                                f"❌ 문제 {row['problem_id']}: 일관성 계산 오류!\n"
+                                f"   공통 오답: {count}개, 전체 오답: {total_incorrect_models}개\n"
+                                f"   → {count}/{total_incorrect_models} = {consistency_ratio:.2%}"
+                            )
+                            consistency_ratio = 1.0  # 최대값으로 보정
+                    
+                        if consistency_ratio >= 0.5:
+                            models_selected_this = [m for m, a in selected.items() 
+                                                  if pd.notna(a) and str(a).strip() == most_common_wrong]
+                        
+                            consistent_wrong_patterns.append({
+                                'problem_id': row['problem_id'],
+                                'Question': row['Question'],
+                                'Subject': row['Subject'],
+                                'Year': row['Year'],
+                                'correct_answer': str(correct).strip(),
+                                'common_wrong_answer': most_common_wrong,
+                                'wrong_answer_count': count,  # 공통 오답 수
+                                'total_wrong': total_incorrect_models,  # ⭐ 전체 오답 모델 수 (올바른 값)
+                                'consistency_ratio': consistency_ratio,  # ⭐ 올바른 일관성
+                                'models_with_this_wrong': ', '.join(models_selected_this),
+                                'incorrect_rate': row['incorrect_rate'],
+                                'total_models': total_models,
+                                'valid_answers': valid_answers,
+                                'nan_count': nan_count,
+                                'empty_count': empty_count,
+                                'extracted_wrong_count': len(wrong_answers)  # 실제 추출된 오답 수
+                            })
+        
+            # 🚨 답안 추출 실패 통계 표시
+            if extraction_failures:
+                with st.expander(f"⚠️ 답안 추출 실패 통계 ({len(extraction_failures)}개 문제)"):
+                    failure_df = pd.DataFrame(extraction_failures)
+                    failure_df = failure_df.sort_values('nan_count', ascending=False)
+                
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        total_nan = failure_df['nan_count'].sum()
+                        st.metric("총 nan 개수", f"{total_nan}개")
+                    with col2:
+                        total_empty = failure_df['empty_count'].sum()
+                        st.metric("총 빈 답안 개수", f"{total_empty}개")
+                    with col3:
+                        avg_extraction = failure_df['extraction_rate'].mean()
+                        st.metric("평균 추출 성공률", f"{avg_extraction:.1f}%")
+                
+                    st.warning("""
+                    💡 **답안 추출 실패 원인**:
+                    - **nan**: 모델이 답을 추출하지 못함 (파싱 오류, 형식 불일치)
+                    - **빈 답안**: 모델이 빈 문자열을 반환
+                
+                    **영향**:
+                    - 오답률 계산 시 분모가 감소
+                    - 일관성 계산에서 제외됨
+                
+                    **조치**:
+                    - 벤치마크 로그 확인
+                    - 답안 추출 로직 개선
+                    - 해당 문제 재실행 고려
+                    """)
+                
+                    st.dataframe(
+                        failure_df.head(20).style.format({
+                            'extraction_rate': '{:.1f}%'
+                        }).background_gradient(
+                            subset=['nan_count'],
+                            cmap='Reds'
+                        ),
+                        width='stretch'
+                    )
+        
+            if consistent_wrong_patterns:
+                consistent_df = pd.DataFrame(consistent_wrong_patterns)
+                consistent_df = consistent_df.sort_values('consistency_ratio', ascending=False)
+            
+                # 100% 일관성과 50-99% 일관성 구분
+                perfect_consistency = consistent_df[consistent_df['consistency_ratio'] == 1.0]
+                high_but_not_perfect = consistent_df[consistent_df['consistency_ratio'] < 1.0]
+            
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    total_nan = failure_df['nan_count'].sum()
-                    st.metric("총 nan 개수", f"{total_nan}개")
+                    st.metric("총 일관된 오답 패턴", f"{len(consistent_df)}개",
+                             help="오답률 50% 이상 & 일관성 50% 이상 문제")
                 with col2:
-                    total_empty = failure_df['empty_count'].sum()
-                    st.metric("총 빈 답안 개수", f"{total_empty}개")
+                    st.metric("100% 일관성", f"{len(perfect_consistency)}개", 
+                             delta=f"{len(perfect_consistency)/len(consistent_df)*100:.1f}%",
+                             help="모든 오답 모델이 같은 답을 선택")
                 with col3:
-                    avg_extraction = failure_df['extraction_rate'].mean()
-                    st.metric("평균 추출 성공률", f"{avg_extraction:.1f}%")
-                
-                st.warning("""
-                💡 **답안 추출 실패 원인**:
-                - **nan**: 모델이 답을 추출하지 못함 (파싱 오류, 형식 불일치)
-                - **빈 답안**: 모델이 빈 문자열을 반환
-                
-                **영향**:
-                - 오답률 계산 시 분모가 감소
-                - 일관성 계산에서 제외됨
-                
-                **조치**:
-                - 벤치마크 로그 확인
-                - 답안 추출 로직 개선
-                - 해당 문제 재실행 고려
+                    st.metric("50-99% 일관성", f"{len(high_but_not_perfect)}개",
+                             delta=f"{len(high_but_not_perfect)/len(consistent_df)*100:.1f}%",
+                             help="대부분 오답 모델이 같은 답을 선택")
+            
+                st.success(f"""
+                ✅ **{len(consistent_df)}개의 일관된 오답 패턴 발견!** (오답률 ≥50% 문제 중)
+            
+                이는 특정 모델의 문제가 아닌, **여러 LLM에 공통적으로 존재하는 공통 오답**를 의미합니다.
                 """)
-                
-                st.dataframe(
-                    failure_df.head(20).style.format({
-                        'extraction_rate': '{:.1f}%'
-                    }).background_gradient(
-                        subset=['nan_count'],
-                        cmap='Reds'
-                    ),
-                    width='stretch'
-                )
-        
-        if consistent_wrong_patterns:
-            consistent_df = pd.DataFrame(consistent_wrong_patterns)
-            consistent_df = consistent_df.sort_values('consistency_ratio', ascending=False)
             
-            # 100% 일관성과 50-99% 일관성 구분
-            perfect_consistency = consistent_df[consistent_df['consistency_ratio'] == 1.0]
-            high_but_not_perfect = consistent_df[consistent_df['consistency_ratio'] < 1.0]
+                col1, col2 = st.columns(2)
             
+<<<<<<< HEAD
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.metric("총 일관된 오답 패턴", f"{len(consistent_df)}개",
@@ -4013,65 +4195,393 @@ def main():
                     for idx, row in pairs_df.head(5).iterrows():
                         st.write(f"🔗 **{row['Model 1']}** ↔ **{row['Model 2']}**: {row['Agreement']:.1f}%")
                 
-                with col2:
-                    st.markdown("**가장 다른 오답 패턴 (Bottom 5)**")
-                    for idx, row in pairs_df.tail(5).iterrows():
-                        st.write(f"↔️ **{row['Model 1']}** ↔ **{row['Model 2']}**: {row['Agreement']:.1f}%")
-        else:
-            st.warning("2개 이상의 모델이 필요합니다.")
-        
-        # ========================================
-        # 섹션 5: 공통 오답 영역 매핑
-        # ========================================
-        st.markdown("---")
-        st.subheader("🗺️ " + ("공통 오답 영역 매핑" if lang == 'ko' else "Common Wrong Answer Domain Mapping"))
-        
-        all_wrong = problem_analysis[problem_analysis['correct_count'] == 0]
-        
-        if len(all_wrong) > 0:
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                if 'Subject' in all_wrong.columns:
-                    subject_gaps = all_wrong['Subject'].value_counts().reset_index()
-                    subject_gaps.columns = ['Subject', 'Count']
-                    total_by_subject = problem_analysis['Subject'].value_counts()
-                    subject_gaps['Total'] = subject_gaps['Subject'].map(total_by_subject)
-                    subject_gaps['Gap_Ratio'] = (subject_gaps['Count'] / subject_gaps['Total'] * 100).round(1)
-                    
-                    fig = px.bar(
-                        subject_gaps.sort_values('Gap_Ratio', ascending=False),
-                        x='Subject',
-                        y='Gap_Ratio',
-                        title='과목별 공통 오답 비율',
-                        text='Gap_Ratio',
-                        color='Gap_Ratio',
-                        color_continuous_scale='Reds',
-                        hover_data=['Count', 'Total']
+=======
+                with col1:
+                    fig = px.histogram(
+                        consistent_df,
+                        x='consistency_ratio',
+                        nbins=20,
+                        title='일관된 오답 선택 비율 분포' if lang == 'ko' else 'Consistency Ratio Distribution',
+                        labels={'consistency_ratio': '일관성 비율' if lang == 'ko' else 'Consistency Ratio'}
                     )
+                    fig.update_traces(marker_line_color='black', marker_line_width=1.5)
+                    fig.update_layout(
+                        xaxis_title='일관성 비율 (1.0 = 100% 일치)',
+                        yaxis_title='문제 수',
+                        height=400
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+            
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
+                with col2:
+                    if 'Subject' in consistent_df.columns:
+                        subject_pattern_count = consistent_df['Subject'].value_counts().reset_index()
+                        subject_pattern_count.columns = ['Subject', 'Count']
+                    
+                        fig = px.bar(
+                            subject_pattern_count.head(10),
+                            x='Subject',
+                            y='Count',
+                            title='과목별 일관된 오답 패턴' if lang == 'ko' else 'Consistent Wrong Patterns by Subject',
+                            color='Count',
+                            color_continuous_scale='Reds'
+                        )
+                        fig.update_traces(marker_line_color='black', marker_line_width=1.5)
+                        fig.update_layout(height=400)
+                        fig.update_xaxes(tickangle=45)
+                        st.plotly_chart(fig, use_container_width=True)
+            
+                # 탭으로 100% / 50-99% 구분
+                tab1, tab2 = st.tabs([
+                    f"🔴 100% 일관성 ({len(perfect_consistency)}개)",
+                    f"🟠 50-99% 일관성 ({len(high_but_not_perfect)}개)"
+                ])
+            
+                with tab1:
+                    st.markdown("#### " + ("모든 오답 모델이 같은 답을 선택한 문제" if lang == 'ko' else "All Wrong Models Selected Same Answer"))
+                    st.caption("⚠️ 오답률 50% 이상 문제만 포함")
+                
+                    if len(perfect_consistency) > 0:
+                        display_perfect = perfect_consistency.copy()
+                        display_perfect['일관성_pct'] = 100.0
+                        display_perfect['오답률_pct'] = (display_perfect['incorrect_rate'] * 100).round(1)
+                        display_perfect['오답_정보'] = (display_perfect['common_wrong_answer'].astype(str) + 
+                                                       ' (' + display_perfect['wrong_answer_count'].astype(str) + 
+                                                       '/' + display_perfect['total_wrong'].astype(str) + ')')
+                    
+                        # 🔥 오답률 높은 순으로 정렬
+                        display_perfect = display_perfect.sort_values('incorrect_rate', ascending=False)
+                    
+                        # 🔍 검증: 오답률 계산 확인
+                        display_perfect['검증_오답률'] = (display_perfect['total_wrong'] / display_perfect['total_models'] * 100).round(1)
+                        display_perfect['검증_일치'] = (display_perfect['오답률_pct'] - display_perfect['검증_오답률']).abs() < 1.0
+                    
+                        display_df = pd.DataFrame({
+                            '문제 번호' if lang == 'ko' else 'Problem ID': display_perfect['problem_id'],
+                            '과목' if lang == 'ko' else 'Subject': display_perfect['Subject'],
+                            '오답률 (%)': display_perfect['오답률_pct'],
+                            '정답' if lang == 'ko' else 'Correct': display_perfect['correct_answer'],
+                            '공통 오답 (횟수/전체)': display_perfect['오답_정보'],
+                            '일관성 (%)': display_perfect['일관성_pct'],
+                            '평가 모델수': display_perfect['total_models'],
+                            '해당 오답 선택 모델': display_perfect['models_with_this_wrong']
+                        })
+                    
+                        # 🚨 검증 실패 경고
+                        if not display_perfect['검증_일치'].all():
+                            st.warning(f"""
+                            ⚠️ **데이터 불일치 경고**: 일부 문제에서 오답률과 실제 오답 수가 맞지 않습니다.
+                        
+                            가능한 원인:
+                            - 일부 모델의 답안 추출 실패 (nan 값)
+                            - 특정 모델이 해당 문제를 평가하지 않음
+                            - 데이터 필터링으로 인한 모델 수 변화
+                        
+                            💡 "평가 모델수" 컬럼을 확인하여 실제 평가된 모델 수를 확인하세요.
+                            """)
+                    
+                        st.dataframe(
+                            display_df.style.background_gradient(
+                                subset=['오답률 (%)'],
+                                cmap='Reds',
+                                vmin=50,
+                                vmax=100
+                            ).format({
+                                '일관성 (%)': '{:.1f}%',
+                                '오답률 (%)': '{:.1f}%',
+                                '평가 모델수': '{:.0f}'
+                            }),
+                            width='stretch',
+                            height=500
+                        )
+                    
+                        if st.checkbox('📋 ' + ('100% 일관성 문제 상세 보기' if lang == 'ko' else 'Show Details'), key='perfect_details'):
+                            st.info(f"💡 총 {len(display_perfect)}개 문제의 상세 내용을 표시합니다. (오답률 높은 순)")
+                            for idx, row in display_perfect.iterrows():  # 🔥 head(20) 제거 - 전체 표시
+                                with st.expander(f"🔍 {row['problem_id']} - 일관성 100% (오답률 {row['incorrect_rate']*100:.1f}%)"):
+                                    q_detail = filtered_df[filtered_df['Question'] == row['Question']].iloc[0]
+                                
+                                    st.markdown(f"**{'문제' if lang == 'ko' else 'Question'}:** {q_detail['Question']}")
+                                    st.markdown(f"**{'과목' if lang == 'ko' else 'Subject'}:** {row['Subject']}")
+                                    st.markdown(f"**오답률:** {row['incorrect_rate']*100:.1f}%")
+                                
+                                    if all([f'Option {i}' in q_detail for i in range(1, 5)]):
+                                        st.markdown("**선택지:**")
+                                        for i in range(1, 5):
+                                            option = q_detail[f'Option {i}']
+                                            if pd.notna(option):
+                                                if str(i) == str(row['correct_answer']):
+                                                    st.markdown(f"✅ **{i}. {option}** (정답)")
+                                                elif str(i) == str(row['common_wrong_answer']):
+                                                    st.markdown(f"❌ **{i}. {option}** (모든 오답 모델이 선택)")
+                                                else:
+                                                    st.markdown(f"  {i}. {option}")
+                                
+                                    st.markdown(f"**🎯 정답:** {row['correct_answer']}")
+                                    st.markdown(f"**❌ 공통 오답:** {row['common_wrong_answer']} (모든 {row['total_wrong']}개 오답 모델)")
+                                    st.markdown(f"**🤖 해당 오답 선택 모델:** {row['models_with_this_wrong']}")
+                    else:
+                        st.info("100% 일관성 패턴이 발견되지 않았습니다.")
+            
+                with tab2:
+                    st.markdown("#### " + ("50-99%의 오답 모델이 같은 답을 선택한 문제" if lang == 'ko' else "50-99% Wrong Models Selected Same Answer"))
+                    st.caption("⚠️ 오답률 50% 이상 문제만 포함")
+                
+                    if len(high_but_not_perfect) > 0:
+                        display_high = high_but_not_perfect.copy()
+                        display_high['일관성_pct'] = (display_high['consistency_ratio'] * 100).round(1)
+                        display_high['오답률_pct'] = (display_high['incorrect_rate'] * 100).round(1)
+                        display_high['오답_정보'] = (display_high['common_wrong_answer'].astype(str) + 
+                                                   ' (' + display_high['wrong_answer_count'].astype(str) + 
+                                                   '/' + display_high['total_wrong'].astype(str) + ')')
+                    
+                        # 🔥 오답률 높은 순으로 정렬
+                        display_high = display_high.sort_values('incorrect_rate', ascending=False)
+                    
+                        display_df = pd.DataFrame({
+                            '문제 번호' if lang == 'ko' else 'Problem ID': display_high['problem_id'],
+                            '과목' if lang == 'ko' else 'Subject': display_high['Subject'],
+                            '오답률 (%)': display_high['오답률_pct'],
+                            '정답' if lang == 'ko' else 'Correct': display_high['correct_answer'],
+                            '공통 오답 (횟수/전체)': display_high['오답_정보'],
+                            '일관성 (%)': display_high['일관성_pct'],
+                            '평가 모델수': display_high['total_models'],
+                            '해당 오답 선택 모델': display_high['models_with_this_wrong']
+                        })
+                    
+                        st.dataframe(
+                            display_df.style.background_gradient(
+                                subset=['일관성 (%)'],
+                                cmap='Oranges',
+                                vmin=50,
+                                vmax=100
+                            ).format({
+                                '일관성 (%)': '{:.1f}%',
+                                '오답률 (%)': '{:.1f}%',
+                                '평가 모델수': '{:.0f}'
+                            }),
+                            width='stretch',
+                            height=500
+                        )
+                    
+                        if st.checkbox('📋 ' + ('50-99% 일관성 문제 상세 보기' if lang == 'ko' else 'Show Details'), key='high_details'):
+                            st.info(f"💡 총 {len(display_high)}개 문제의 상세 내용을 표시합니다. (오답률 높은 순)")
+                            for idx, row in display_high.iterrows():  # 🔥 head(30) 제거 - 전체 표시
+                                with st.expander(f"🔍 {row['problem_id']} - 일관성 {row['consistency_ratio']*100:.1f}% (오답률 {row['incorrect_rate']*100:.1f}%)"):
+                                    q_detail = filtered_df[filtered_df['Question'] == row['Question']].iloc[0]
+                                
+                                    st.markdown(f"**{'문제' if lang == 'ko' else 'Question'}:** {q_detail['Question']}")
+                                    st.markdown(f"**{'과목' if lang == 'ko' else 'Subject'}:** {row['Subject']}")
+                                    st.markdown(f"**오답률:** {row['incorrect_rate']*100:.1f}%")
+                                
+                                    if all([f'Option {i}' in q_detail for i in range(1, 5)]):
+                                        st.markdown("**선택지:**")
+                                        for i in range(1, 5):
+                                            option = q_detail[f'Option {i}']
+                                            if pd.notna(option):
+                                                if str(i) == str(row['correct_answer']):
+                                                    st.markdown(f"✅ **{i}. {option}** (정답)")
+                                                elif str(i) == str(row['common_wrong_answer']):
+                                                    st.markdown(f"❌ **{i}. {option}** (일관된 오답 - {row['wrong_answer_count']}개 모델)")
+                                                else:
+                                                    st.markdown(f"  {i}. {option}")
+                                
+                                    st.markdown(f"**🎯 정답:** {row['correct_answer']}")
+                                    st.markdown(f"**❌ 공통 오답:** {row['common_wrong_answer']} ({row['wrong_answer_count']}/{row['total_wrong']} = {row['consistency_ratio']*100:.1f}% 일관성)")
+                                    st.markdown(f"**🤖 해당 오답 선택 모델:** {row['models_with_this_wrong']}")
+                    else:
+                        st.info("50-99% 일관성 패턴이 발견되지 않았습니다.")
+            else:
+                st.warning("일관된 오답 선택 패턴이 발견되지 않았습니다. (오답률 50% 이상 & 일관성 50% 이상 문제 없음)")
+        
+            # 섹션 3: 프롬프팅 방식별 공통 오답 비교
+            # ========================================
+            st.markdown("---")
+            st.subheader("📋 " + ("프롬프팅 방식별 공통 오답 분석" if lang == 'ko' else "Common Wrong Answer by Prompting"))
+        
+            if '프롬프팅' in filtered_df.columns and filtered_df['프롬프팅'].nunique() > 1:
+                st.info("""
+                💡 **논문 방법론**: 특정 프롬프팅 방식에서 모델들이 일관되게 틀리는 문제를 식별
+                """)
+            
+                prompting_analysis = []
+            
+                for prompting in filtered_df['프롬프팅'].unique():
+                    prompt_df = filtered_df[filtered_df['프롬프팅'] == prompting]
+                    prompt_problems = prompt_df.groupby('Question').agg({'정답여부': ['sum', 'count']}).reset_index()
+                    prompt_problems.columns = ['Question', 'correct_count', 'total_count']
+                    all_wrong_in_prompt = len(prompt_problems[prompt_problems['correct_count'] == 0])
+                    avg_acc = prompt_df['정답여부'].mean() * 100
+                
+                    prompting_analysis.append({
+                        '프롬프팅': prompting,
+                        '전체_문제수': prompt_df['Question'].nunique(),
+                        '완전_지식격차': all_wrong_in_prompt,
+                        '평균_정확도': avg_acc,
+                        '지식격차_비율': (all_wrong_in_prompt / prompt_df['Question'].nunique() * 100) if prompt_df['Question'].nunique() > 0 else 0
+                    })
+            
+                prompt_comp_df = pd.DataFrame(prompting_analysis).sort_values('완전_지식격차', ascending=False)
+            
+                col1, col2 = st.columns(2)
+            
+                with col1:
+                    fig = px.bar(
+                        prompt_comp_df,
+                        x='프롬프팅',
+                        y='완전_지식격차',
+                        title='프롬프팅 방식별 완전 공통 오답',
+                        text='완전_지식격차',
+                        color='완전_지식격차',
+                        color_continuous_scale='Reds'
+                    )
+<<<<<<< HEAD
                     fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside', marker_line_color='black', marker_line_width=1.5)
                     fig.update_layout(height=400, yaxis_title='공통 오답 비율 (%)')
                     fig.update_xaxes(tickangle=45)
                     st.plotly_chart(fig, width='stretch')
+=======
+                    fig.update_traces(textposition='outside', marker_line_color='black', marker_line_width=1.5)
+                    fig.update_layout(height=400)
+                    st.plotly_chart(fig, use_container_width=True)
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
             
-            with col2:
-                if 'Year' in all_wrong.columns:
-                    year_gaps = all_wrong['Year'].value_counts().reset_index()
-                    year_gaps.columns = ['Year', 'Count']
-                    year_gaps = year_gaps[year_gaps['Year'] != 'Unknown']
+                with col2:
+                    fig = px.scatter(
+                        prompt_comp_df,
+                        x='평균_정확도',
+                        y='지식격차_비율',
+                        size='전체_문제수',
+                        text='프롬프팅',
+                        title='정확도 vs 지식격차 비율',
+                        labels={'평균_정확도': '평균 정확도 (%)', '지식격차_비율': '지식격차 비율 (%)'}
+                    )
+                    fig.update_traces(textposition='top center', marker=dict(line=dict(width=2, color='black')))
+                    fig.update_layout(height=400)
+                    st.plotly_chart(fig, use_container_width=True)
+            
+                st.dataframe(
+                    prompt_comp_df.style.format({
+                        '평균_정확도': '{:.2f}%',
+                        '지식격차_비율': '{:.2f}%'
+                    }).background_gradient(subset=['완전_지식격차'], cmap='Reds'),
+                    width='stretch'
+                )
+            else:
+                st.info("프롬프팅 방식이 1개만 선택되어 비교 불가")
+        
+            # ========================================
+            # 섹션 4: 모델 간 오답 일치도 매트릭스
+            # ========================================
+            st.markdown("---")
+            st.subheader("🔗 " + ("모델 간 오답 일치도 매트릭스" if lang == 'ko' else "Inter-Model Error Agreement"))
+        
+            st.info("""
+            💡 **분석 목적**: 어떤 모델들이 유사한 실수를 하는지 파악
+            높은 일치도 = 유사한 공통 오답 공유
+            """)
+        
+            models = filtered_df['모델'].unique().tolist()
+        
+            if len(models) >= 2:
+                problem_model_matrix = filtered_df.pivot_table(
+                    index='Question',
+                    columns='모델',
+                    values='정답여부',
+                    aggfunc='first'
+                ).fillna(0)
+            
+                agreement_matrix = pd.DataFrame(index=models, columns=models, dtype=float)
+            
+                for model1 in models:
+                    for model2 in models:
+                        if model1 in problem_model_matrix.columns and model2 in problem_model_matrix.columns:
+                            both_wrong = ((problem_model_matrix[model1] == 0) & (problem_model_matrix[model2] == 0)).sum()
+                            either_wrong = ((problem_model_matrix[model1] == 0) | (problem_model_matrix[model2] == 0)).sum()
+                            agreement = both_wrong / either_wrong if either_wrong > 0 else 0
+                            agreement_matrix.loc[model1, model2] = agreement * 100
+                        else:
+                            agreement_matrix.loc[model1, model2] = 0
+            
+                agreement_matrix = agreement_matrix.astype(float)
+            
+                fig = go.Figure(data=go.Heatmap(
+                    z=agreement_matrix.values,
+                    x=agreement_matrix.columns,
+                    y=agreement_matrix.index,
+                    colorscale='RdYlBu_r',
+                    text=np.round(agreement_matrix.values, 1),
+                    texttemplate='%{text:.1f}',
+                    textfont={"size": int(12 * chart_text_size)},
+                    colorbar=dict(title="일치도 (%)"),
+                    xgap=2,
+                    ygap=2
+                ))
+            
+                fig.update_layout(
+                    title='모델 간 오답 일치도 (%)',
+                    height=max(400, len(models) * 40)
+                )
+                fig.update_xaxes(tickangle=45)
+                st.plotly_chart(fig, use_container_width=True)
+            
+                agreement_pairs = []
+                for i, model1 in enumerate(models):
+                    for j, model2 in enumerate(models):
+                        if i < j:
+                            agreement_pairs.append({
+                                'Model 1': model1,
+                                'Model 2': model2,
+                                'Agreement': agreement_matrix.loc[model1, model2]
+                            })
+            
+                if agreement_pairs:
+                    pairs_df = pd.DataFrame(agreement_pairs).sort_values('Agreement', ascending=False)
+                
+                    col1, col2 = st.columns(2)
+                
+                    with col1:
+                        st.markdown("**가장 유사한 오답 패턴 (Top 5)**")
+                        for idx, row in pairs_df.head(5).iterrows():
+                            st.write(f"🔗 **{row['Model 1']}** ↔ **{row['Model 2']}**: {row['Agreement']:.1f}%")
+                
+                    with col2:
+                        st.markdown("**가장 다른 오답 패턴 (Bottom 5)**")
+                        for idx, row in pairs_df.tail(5).iterrows():
+                            st.write(f"↔️ **{row['Model 1']}** ↔ **{row['Model 2']}**: {row['Agreement']:.1f}%")
+            else:
+                st.warning("2개 이상의 모델이 필요합니다.")
+        
+            # ========================================
+            # 섹션 5: 공통 오답 영역 매핑
+            # ========================================
+            st.markdown("---")
+            st.subheader("🗺️ " + ("공통 오답 영역 매핑" if lang == 'ko' else "Common Wrong Answer Domain Mapping"))
+        
+            all_wrong = problem_analysis[problem_analysis['correct_count'] == 0]
+        
+            if len(all_wrong) > 0:
+                col1, col2 = st.columns(2)
+            
+                with col1:
+                    if 'Subject' in all_wrong.columns:
+                        subject_gaps = all_wrong['Subject'].value_counts().reset_index()
+                        subject_gaps.columns = ['Subject', 'Count']
+                        total_by_subject = problem_analysis['Subject'].value_counts()
+                        subject_gaps['Total'] = subject_gaps['Subject'].map(total_by_subject)
+                        subject_gaps['Gap_Ratio'] = (subject_gaps['Count'] / subject_gaps['Total'] * 100).round(1)
                     
-                    if len(year_gaps) > 0:
-                        year_gaps['Year_Int'] = year_gaps['Year'].apply(safe_convert_to_int)
-                        year_gaps = year_gaps[year_gaps['Year_Int'].notna()].sort_values('Year_Int')
-                        
-                        fig = px.line(
-                            year_gaps,
-                            x='Year_Int',
-                            y='Count',
-                            title='연도별 공통 오답 문제 수',
-                            markers=True,
-                            text='Count'
+                        fig = px.bar(
+                            subject_gaps.sort_values('Gap_Ratio', ascending=False),
+                            x='Subject',
+                            y='Gap_Ratio',
+                            title='과목별 공통 오답 비율',
+                            text='Gap_Ratio',
+                            color='Gap_Ratio',
+                            color_continuous_scale='Reds',
+                            hover_data=['Count', 'Total']
                         )
+<<<<<<< HEAD
                         fig.update_traces(textposition='top center', marker_size=10, marker_line_color='black', marker_line_width=2, line_width=3)
                         fig.update_layout(height=400, xaxis_title='연도', yaxis_title='문제 수')
                         st.plotly_chart(fig, width='stretch')
@@ -4117,132 +4627,70 @@ def main():
         if len(all_wrong) > 0:
             st.error(f"""
             ⚠️ **심각한 공통 오답 발견: {len(all_wrong)}개 문제**
+=======
+                        fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside', marker_line_color='black', marker_line_width=1.5)
+                        fig.update_layout(height=400, yaxis_title='공통 오답 비율 (%)')
+                        fig.update_xaxes(tickangle=45)
+                        st.plotly_chart(fig, use_container_width=True)
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
             
-            이 문제들은 **모든 평가 모델이 틀렸습니다**. 현재 LLM들이 공통적으로 
-            해당 지식 영역을 제대로 이해하지 못하고 있음을 의미합니다.
-            """)
-            
-            display_all_wrong = pd.DataFrame({
-                ('문제 번호' if lang == 'ko' else 'Problem ID'): all_wrong['problem_id'],
-                ('과목' if lang == 'ko' else 'Subject'): all_wrong['Subject'],
-                ('연도' if lang == 'ko' else 'Year'): all_wrong['Year'],
-                ('오답 모델수' if lang == 'ko' else 'Incorrect Count'): all_wrong['incorrect_count'].astype(int),
-                '오답 모델' if lang == 'ko' else 'Incorrect Models': all_wrong['incorrect_models']
+                with col2:
+                    if 'Year' in all_wrong.columns:
+                        year_gaps = all_wrong['Year'].value_counts().reset_index()
+                        year_gaps.columns = ['Year', 'Count']
+                        year_gaps = year_gaps[year_gaps['Year'] != 'Unknown']
+                    
+                        if len(year_gaps) > 0:
+                            year_gaps['Year_Int'] = year_gaps['Year'].apply(safe_convert_to_int)
+                            year_gaps = year_gaps[year_gaps['Year_Int'].notna()].sort_values('Year_Int')
+                        
+                            fig = px.line(
+                                year_gaps,
+                                x='Year_Int',
+                                y='Count',
+                                title='연도별 공통 오답 문제 수',
+                                markers=True,
+                                text='Count'
+                            )
+                            fig.update_traces(textposition='top center', marker_size=10, marker_line_color='black', marker_line_width=2, line_width=3)
+                            fig.update_layout(height=400, xaxis_title='연도', yaxis_title='문제 수')
+                            st.plotly_chart(fig, use_container_width=True)
+        
+            # ========================================
+            # 섹션 6: Top 20 오답률 높은 문제
+            # ========================================
+            st.markdown("---")
+            st.subheader("📊 " + ("오답률 높은 문제 Top 20" if lang == 'ko' else "Top 20 Problems by Incorrect Rate"))
+        
+            top_20 = problem_analysis.head(20)
+        
+            display_top_20 = pd.DataFrame({
+                ('문제 번호' if lang == 'ko' else 'Problem ID'): top_20['problem_id'],
+                ('과목' if lang == 'ko' else 'Subject'): top_20['Subject'],
+                ('오답 모델수' if lang == 'ko' else 'Incorrect Count'): top_20['incorrect_count'].astype(int),
+                ('정답 모델수' if lang == 'ko' else 'Correct Count'): top_20['correct_count'].astype(int),
+                ('총 모델수' if lang == 'ko' else 'Total Models'): top_20['total_count'].astype(int),
+                ('오답률' if lang == 'ko' else 'Wrong Rate'): (top_20['incorrect_rate'] * 100).round(2),
+                '정답 모델' if lang == 'ko' else 'Correct Models': top_20['correct_models'],
+                '오답 모델' if lang == 'ko' else 'Incorrect Models': top_20['incorrect_models']
             })
-            
-            st.dataframe(display_all_wrong, width='stretch', height=400)
-            
-            if st.checkbox('문제 내용 보기 (완전 공통 오답)' if lang == 'ko' else 'Show Details (Complete Gap)', key='all_wrong_details'):
-                st.info(f"총 {len(all_wrong)}개 문제의 상세 내용")
-                for idx, row in all_wrong.head(20).iterrows():
-                    with st.expander(f"🚨 {row['problem_id']}"):
-                        q_detail = filtered_df[filtered_df['Question'] == row['Question']].iloc[0]
-                        st.write(f"**{'문제' if lang == 'ko' else 'Question'}:** {q_detail['Question']}")
-                        
-                        if 'Subject' in q_detail and pd.notna(q_detail['Subject']):
-                            st.write(f"**과목:** {q_detail['Subject']}")
-                        
-                        if all([f'Option {i}' in q_detail for i in range(1, 5)]):
-                            st.write("**선택지:**")
-                            for i in range(1, 5):
-                                option = q_detail[f'Option {i}']
-                                if pd.notna(option):
-                                    if str(i) == str(row['CorrectAnswer']):
-                                        st.write(f"  ✅ {i}. {option} **(정답)**")
-                                    else:
-                                        st.write(f"  {i}. {option}")
-                        
-                        if 'Answer' in q_detail and pd.notna(q_detail['Answer']):
-                            st.write(f"**정답:** {q_detail['Answer']}")
-                        
-                        st.write("**각 모델이 선택한 답:**")
-                        for model, answer in row['selected_answers'].items():
-                            st.write(f"  • {model}: {answer}")
-        else:
-            st.success("✅ 모든 모델이 틀린 문제가 없습니다!")
         
-        # ========================================
-        # 섹션 8: 대부분 모델이 틀린 문제 (≥50%) ⭐ 기존 기능
-        # ========================================
-        st.markdown("---")
-        st.subheader("⚠️ " + ("대부분 모델이 틀린 문제 (≥50%)" if lang == 'ko' else "Most Models Incorrect (≥50%)"))
-        
-        most_wrong = problem_analysis[problem_analysis['incorrect_rate'] >= 0.5]
-        
-        if len(most_wrong) > 0:
-            st.warning(f"""
-            ⚠️ **주요 공통 오답: {len(most_wrong)}개 문제**
-            
-            이 문제들은 **50% 이상의 모델이 틀렸습니다**. 해당 지식 영역이 
-            많은 LLM에게 어려운 영역임을 의미합니다.
-            """)
-            
-            display_most_wrong = pd.DataFrame({
-                ('문제 번호' if lang == 'ko' else 'Problem ID'): most_wrong['problem_id'],
-                ('과목' if lang == 'ko' else 'Subject'): most_wrong['Subject'],
-                ('오답 모델수' if lang == 'ko' else 'Incorrect Count'): most_wrong['incorrect_count'].astype(int),
-                ('정답 모델수' if lang == 'ko' else 'Correct Count'): most_wrong['correct_count'].astype(int),
-                ('총 모델수' if lang == 'ko' else 'Total Models'): most_wrong['total_count'].astype(int),
-                ('오답률' if lang == 'ko' else 'Wrong Rate'): (most_wrong['incorrect_rate'] * 100).round(2),
-                '정답 모델' if lang == 'ko' else 'Correct Models': most_wrong['correct_models'],
-                '오답 모델' if lang == 'ko' else 'Incorrect Models': most_wrong['incorrect_models']
-            })
-            
             st.dataframe(
-                display_most_wrong.style.background_gradient(
+                display_top_20.style.background_gradient(
                     subset=['오답률' if lang == 'ko' else 'Wrong Rate'],
                     cmap='Reds',
                     vmin=0,
                     vmax=100
                 ),
                 width='stretch',
-                height=400
+                height=600
             )
-            
-            if st.checkbox('문제 내용 보기 (대부분 틀린 문제)' if lang == 'ko' else 'Show Details (Most Incorrect)', key='most_wrong_details'):
-                st.info(f"총 {len(most_wrong)}개 문제 중 상위 20개")
-                for idx, row in most_wrong.head(20).iterrows():
-                    with st.expander(f"⚠️ {row['problem_id']} - 오답률 {row['incorrect_rate']*100:.1f}%"):
-                        q_detail = filtered_df[filtered_df['Question'] == row['Question']].iloc[0]
-                        st.write(f"**문제:** {q_detail['Question']}")
-                        
-                        if 'Subject' in q_detail and pd.notna(q_detail['Subject']):
-                            st.write(f"**과목:** {q_detail['Subject']}")
-                        
-                        if all([f'Option {i}' in q_detail for i in range(1, 5)]):
-                            st.write("**선택지:**")
-                            for i in range(1, 5):
-                                option = q_detail[f'Option {i}']
-                                if pd.notna(option):
-                                    if str(i) == str(row['CorrectAnswer']):
-                                        st.write(f"  ✅ {i}. {option} **(정답)**")
-                                    else:
-                                        st.write(f"  {i}. {option}")
-                        
-                        if 'Answer' in q_detail and pd.notna(q_detail['Answer']):
-                            st.write(f"**정답:** {q_detail['Answer']}")
-                        
-                        st.markdown("---")
-                        
-                        # 정답 모델과 오답 모델 분리 표시
-                        if row['correct_count'] > 0:
-                            st.write("**✓ 정답 모델:**")
-                            for model, answer in row['selected_answers'].items():
-                                if str(answer) == str(row['CorrectAnswer']):
-                                    st.write(f"  • **{model}**: 선택 {answer} ✅")
-                        
-                        st.write("**✗ 오답 모델:**")
-                        for model, answer in row['selected_answers'].items():
-                            if str(answer) != str(row['CorrectAnswer']):
-                                st.write(f"  • **{model}**: 선택 {answer} (정답: {row['CorrectAnswer']})")
-        else:
-            st.info("50% 이상의 모델이 틀린 문제가 없습니다.")
         
-        # ========================================
-        # 섹션 9: 법령/비법령 오답 분석 ⭐ 신규 기능
-        # ========================================
-        if 'law' in filtered_df.columns:
+            # ========================================
+            # 섹션 7: 모든 모델이 틀린 문제 (완전 공통 오답)
+            # ========================================
             st.markdown("---")
+<<<<<<< HEAD
             st.subheader("⚖️ " + ("법령/비법령 오답 분석" if lang == 'ko' else "Law/Non-Law Incorrect Analysis"))
             
             st.info("""
@@ -4309,34 +4757,40 @@ def main():
             law_complete_gap = law_all_wrong[law_all_wrong['law_status'] == 'O']
             
             if len(law_complete_gap) > 0:
+=======
+            st.subheader("🚨 " + ("모든 모델이 틀린 문제 (완전 공통 오답)" if lang == 'ko' else "All Models Incorrect (Complete Common Wrong Answer)"))
+        
+            all_wrong = problem_analysis[problem_analysis['correct_count'] == 0]
+        
+            if len(all_wrong) > 0:
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                 st.error(f"""
-                ⚠️ **법령 공통 오답: {len(law_complete_gap)}개 문제**
-                
-                모든 모델이 틀린 법령 문제입니다. 법률 용어, 규정 해석, 법적 판단에 대한 
-                근본적인 지식 부족을 의미합니다.
+                ⚠️ **심각한 공통 오답 발견: {len(all_wrong)}개 문제**
+            
+                이 문제들은 **모든 평가 모델이 틀렸습니다**. 현재 LLM들이 공통적으로 
+                해당 지식 영역을 제대로 이해하지 못하고 있음을 의미합니다.
                 """)
-                
-                display_law_gap = pd.DataFrame({
-                    '문제 번호': law_complete_gap['problem_id'],
-                    '과목': law_complete_gap['Subject'],
-                    '연도': law_complete_gap['Year'],
-                    '오답 모델수': law_complete_gap['incorrect_count'].astype(int)
+            
+                display_all_wrong = pd.DataFrame({
+                    ('문제 번호' if lang == 'ko' else 'Problem ID'): all_wrong['problem_id'],
+                    ('과목' if lang == 'ko' else 'Subject'): all_wrong['Subject'],
+                    ('연도' if lang == 'ko' else 'Year'): all_wrong['Year'],
+                    ('오답 모델수' if lang == 'ko' else 'Incorrect Count'): all_wrong['incorrect_count'].astype(int),
+                    '오답 모델' if lang == 'ko' else 'Incorrect Models': all_wrong['incorrect_models']
                 })
-                
-                st.dataframe(display_law_gap, width='stretch')
-                
-                if st.checkbox('법령 공통 오답 문제 상세 보기', key='law_gap_details'):
-                    for idx, row in law_complete_gap.head(10).iterrows():
-                        with st.expander(f"📜 {row['problem_id']}"):
+            
+                st.dataframe(display_all_wrong, width='stretch', height=400)
+            
+                if st.checkbox('문제 내용 보기 (완전 공통 오답)' if lang == 'ko' else 'Show Details (Complete Gap)', key='all_wrong_details'):
+                    st.info(f"총 {len(all_wrong)}개 문제의 상세 내용")
+                    for idx, row in all_wrong.head(20).iterrows():
+                        with st.expander(f"🚨 {row['problem_id']}"):
                             q_detail = filtered_df[filtered_df['Question'] == row['Question']].iloc[0]
-                            st.write(f"**문제:** {q_detail['Question']}")
-                            
-                            if '법령 이름' in q_detail and pd.notna(q_detail['법령 이름']):
-                                st.write(f"**📚 법령:** {q_detail['법령 이름']}")
-                            
+                            st.write(f"**{'문제' if lang == 'ko' else 'Question'}:** {q_detail['Question']}")
+                        
                             if 'Subject' in q_detail and pd.notna(q_detail['Subject']):
                                 st.write(f"**과목:** {q_detail['Subject']}")
-                            
+                        
                             if all([f'Option {i}' in q_detail for i in range(1, 5)]):
                                 st.write("**선택지:**")
                                 for i in range(1, 5):
@@ -4346,84 +4800,32 @@ def main():
                                             st.write(f"  ✅ {i}. {option} **(정답)**")
                                         else:
                                             st.write(f"  {i}. {option}")
-                            
+                        
+                            if 'Answer' in q_detail and pd.notna(q_detail['Answer']):
+                                st.write(f"**정답:** {q_detail['Answer']}")
+                        
                             st.write("**각 모델이 선택한 답:**")
                             for model, answer in row['selected_answers'].items():
                                 st.write(f"  • {model}: {answer}")
             else:
-                st.success("✅ 모든 모델이 틀린 법령 문제가 없습니다!")
-            
-            # 비법령 문제 중 완전 공통 오답
-            st.markdown("#### 📘 " + ("비법령 문제 중 완전 공통 오답" if lang == 'ko' else "Non-Law Problems - Complete Gap"))
-            
-            non_law_complete_gap = law_all_wrong[law_all_wrong['law_status'] != 'O']
-            
-            if len(non_law_complete_gap) > 0:
-                st.warning(f"""
-                ℹ️ **비법령 공통 오답: {len(non_law_complete_gap)}개 문제**
-                
-                모든 모델이 틀린 비법령 문제입니다. 기술적 지식, 실무 경험, 
-                전문 용어 이해 등에 대한 격차를 의미합니다.
-                """)
-                
-                display_non_law_gap = pd.DataFrame({
-                    '문제 번호': non_law_complete_gap['problem_id'],
-                    '과목': non_law_complete_gap['Subject'],
-                    '연도': non_law_complete_gap['Year'],
-                    '오답 모델수': non_law_complete_gap['incorrect_count'].astype(int)
-                })
-                
-                st.dataframe(display_non_law_gap, width='stretch')
-            else:
-                st.success("✅ 모든 모델이 틀린 비법령 문제가 없습니다!")
-            
-            # 인사이트 및 권장 조치
+                st.success("✅ 모든 모델이 틀린 문제가 없습니다!")
+        
+            # ========================================
+            # 섹션 8: 대부분 모델이 틀린 문제 (≥50%) ⭐ 기존 기능
+            # ========================================
             st.markdown("---")
-            st.markdown("#### 💡 " + ("법령/비법령 공통 오답 인사이트" if lang == 'ko' else "Law/Non-Law Gap Insights"))
-            
-            law_gap_count = len(law_complete_gap)
-            non_law_gap_count = len(non_law_complete_gap)
-            law_gap_ratio = (law_gap_count / total_law * 100) if total_law > 0 else 0
-            non_law_gap_ratio = (non_law_gap_count / total_non_law * 100) if total_non_law > 0 else 0
-            
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                st.metric("법령 공통 오답 비율", f"{law_gap_ratio:.1f}%", f"{law_gap_count}/{total_law}")
-            
-            with col2:
-                st.metric("비법령 공통 오답 비율", f"{non_law_gap_ratio:.1f}%", f"{non_law_gap_count}/{total_non_law}")
-            
-            with col3:
-                if law_gap_ratio > non_law_gap_ratio:
-                    st.metric("더 취약한 영역", "법령", f"+{law_gap_ratio - non_law_gap_ratio:.1f}%p")
-                else:
-                    st.metric("더 취약한 영역", "비법령", f"+{non_law_gap_ratio - law_gap_ratio:.1f}%p")
-            
-            if law_gap_ratio > non_law_gap_ratio * 1.5:
-                st.error(f"""
-                🚨 **법령 지식이 특히 취약합니다!**
-                
-                법령 문제의 공통 오답 비율({law_gap_ratio:.1f}%)이 비법령({non_law_gap_ratio:.1f}%)보다 
-                {law_gap_ratio / non_law_gap_ratio:.1f}배 높습니다.
-                
-                **권장 조치**:
-                - 법률 용어 및 규정에 대한 학습 데이터 보강
-                - 법령 해석 예시 추가
-                - 법률 전문가 검토 및 피드백 반영
-                """)
-            elif non_law_gap_ratio > law_gap_ratio * 1.5:
+            st.subheader("⚠️ " + ("대부분 모델이 틀린 문제 (≥50%)" if lang == 'ko' else "Most Models Incorrect (≥50%)"))
+        
+            most_wrong = problem_analysis[problem_analysis['incorrect_rate'] >= 0.5]
+        
+            if len(most_wrong) > 0:
                 st.warning(f"""
-                ⚠️ **기술/실무 지식이 상대적으로 취약합니다!**
-                
-                비법령 문제의 공통 오답 비율({non_law_gap_ratio:.1f}%)이 법령({law_gap_ratio:.1f}%)보다 
-                {non_law_gap_ratio / law_gap_ratio:.1f}배 높습니다.
-                
-                **권장 조치**:
-                - 기술적 세부사항 학습 데이터 보강
-                - 실무 사례 및 적용 예시 추가
-                - 전문 용어 정의 명확화
+                ⚠️ **주요 공통 오답: {len(most_wrong)}개 문제**
+            
+                이 문제들은 **50% 이상의 모델이 틀렸습니다**. 해당 지식 영역이 
+                많은 LLM에게 어려운 영역임을 의미합니다.
                 """)
+<<<<<<< HEAD
             else:
                 st.success(f"""
                 ✅ **법령과 비법령 공통 오답가 균형적입니다.**
@@ -4554,14 +4956,21 @@ def main():
                 labels=bin_labels,
                 include_lowest=True
             )
+=======
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
             
-            # 피벗 테이블 생성
-            heatmap_pivot = pd.crosstab(
-                heatmap_data['consistency_bin'], 
-                heatmap_data['incorrect_bin'],
-                dropna=False
-            )
+                display_most_wrong = pd.DataFrame({
+                    ('문제 번호' if lang == 'ko' else 'Problem ID'): most_wrong['problem_id'],
+                    ('과목' if lang == 'ko' else 'Subject'): most_wrong['Subject'],
+                    ('오답 모델수' if lang == 'ko' else 'Incorrect Count'): most_wrong['incorrect_count'].astype(int),
+                    ('정답 모델수' if lang == 'ko' else 'Correct Count'): most_wrong['correct_count'].astype(int),
+                    ('총 모델수' if lang == 'ko' else 'Total Models'): most_wrong['total_count'].astype(int),
+                    ('오답률' if lang == 'ko' else 'Wrong Rate'): (most_wrong['incorrect_rate'] * 100).round(2),
+                    '정답 모델' if lang == 'ko' else 'Correct Models': most_wrong['correct_models'],
+                    '오답 모델' if lang == 'ko' else 'Incorrect Models': most_wrong['incorrect_models']
+                })
             
+<<<<<<< HEAD
             # 모든 구간이 있도록 reindex
             heatmap_pivot = heatmap_pivot.reindex(index=bin_labels, columns=bin_labels, fill_value=0)
             
@@ -4970,302 +5379,1087 @@ def main():
                 subject_difficulty.columns = ['과목', '평균_난이도', '문제수']
                 subj_col = '과목'
                 avg_diff_col = '평균_난이도'
+=======
+                st.dataframe(
+                    display_most_wrong.style.background_gradient(
+                        subset=['오답률' if lang == 'ko' else 'Wrong Rate'],
+                        cmap='Reds',
+                        vmin=0,
+                        vmax=100
+                    ),
+                    width='stretch',
+                    height=400
+                )
+            
+                if st.checkbox('문제 내용 보기 (대부분 틀린 문제)' if lang == 'ko' else 'Show Details (Most Incorrect)', key='most_wrong_details'):
+                    st.info(f"총 {len(most_wrong)}개 문제 중 상위 20개")
+                    for idx, row in most_wrong.head(20).iterrows():
+                        with st.expander(f"⚠️ {row['problem_id']} - 오답률 {row['incorrect_rate']*100:.1f}%"):
+                            q_detail = filtered_df[filtered_df['Question'] == row['Question']].iloc[0]
+                            st.write(f"**문제:** {q_detail['Question']}")
+                        
+                            if 'Subject' in q_detail and pd.notna(q_detail['Subject']):
+                                st.write(f"**과목:** {q_detail['Subject']}")
+                        
+                            if all([f'Option {i}' in q_detail for i in range(1, 5)]):
+                                st.write("**선택지:**")
+                                for i in range(1, 5):
+                                    option = q_detail[f'Option {i}']
+                                    if pd.notna(option):
+                                        if str(i) == str(row['CorrectAnswer']):
+                                            st.write(f"  ✅ {i}. {option} **(정답)**")
+                                        else:
+                                            st.write(f"  {i}. {option}")
+                        
+                            if 'Answer' in q_detail and pd.notna(q_detail['Answer']):
+                                st.write(f"**정답:** {q_detail['Answer']}")
+                        
+                            st.markdown("---")
+                        
+                            # 정답 모델과 오답 모델 분리 표시
+                            if row['correct_count'] > 0:
+                                st.write("**✓ 정답 모델:**")
+                                for model, answer in row['selected_answers'].items():
+                                    if str(answer) == str(row['CorrectAnswer']):
+                                        st.write(f"  • **{model}**: 선택 {answer} ✅")
+                        
+                            st.write("**✗ 오답 모델:**")
+                            for model, answer in row['selected_answers'].items():
+                                if str(answer) != str(row['CorrectAnswer']):
+                                    st.write(f"  • **{model}**: 선택 {answer} (정답: {row['CorrectAnswer']})")
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
             else:
-                subject_difficulty.columns = ['Subject', 'Avg Difficulty', 'Problem Count']
-                subj_col = 'Subject'
-                avg_diff_col = 'Avg Difficulty'
+                st.info("50% 이상의 모델이 틀린 문제가 없습니다.")
+        
+            # ========================================
+            # 섹션 9: 법령/비법령 오답 분석 ⭐ 신규 기능
+            # ========================================
+            if 'law' in filtered_df.columns:
+                st.markdown("---")
+                st.subheader("⚖️ " + ("법령/비법령 오답 분석" if lang == 'ko' else "Law/Non-Law Incorrect Analysis"))
             
-            subject_difficulty = subject_difficulty.sort_values(avg_diff_col)
+                st.info("""
+                💡 **법령 공통 오답 분석**: 법령 문제와 비법령 문제에서 모델들의 오답 패턴이 
+                어떻게 다른지 분석하여 법률 지식의 격차를 파악합니다.
+                """)
             
+                col1, col2 = st.columns(2)
+            
+                with col1:
+                    # 법령/비법령별 완전 공통 오답 비율
+                    law_all_wrong = problem_analysis[problem_analysis['correct_count'] == 0]
+                    law_gap_by_type = law_all_wrong['law_status'].value_counts()
+                
+                    law_gap_data = pd.DataFrame({
+                        '구분': ['법령' if x == 'O' else '비법령' for x in law_gap_by_type.index],
+                        '완전_지식격차': law_gap_by_type.values
+                    })
+                
+                    total_law = len(problem_analysis[problem_analysis['law_status'] == 'O'])
+                    total_non_law = len(problem_analysis[problem_analysis['law_status'] != 'O'])
+                
+                    law_gap_data['전체문제'] = law_gap_data['구분'].apply(
+                        lambda x: total_law if x == '법령' else total_non_law
+                    )
+                    law_gap_data['비율'] = (law_gap_data['완전_지식격차'] / law_gap_data['전체문제'] * 100).round(1)
+                
+                    fig = px.bar(
+                        law_gap_data,
+                        x='구분',
+                        y='비율',
+                        title='법령/비법령 완전 공통 오답 비율',
+                        text='비율',
+                        color='비율',
+                        color_continuous_scale='Reds',
+                        hover_data=['완전_지식격차', '전체문제']
+                    )
+                    fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside', marker_line_color='black', marker_line_width=1.5)
+                    fig.update_layout(height=400, yaxis_title='공통 오답 비율 (%)')
+                    st.plotly_chart(fig, use_container_width=True)
+            
+                with col2:
+                    # 법령/비법령별 평균 오답률
+                    law_incorrect_rate = problem_analysis.groupby('law_status')['incorrect_rate'].mean().reset_index()
+                    law_incorrect_rate['구분'] = law_incorrect_rate['law_status'].apply(lambda x: '법령' if x == 'O' else '비법령')
+                    law_incorrect_rate['평균_오답률'] = law_incorrect_rate['incorrect_rate'] * 100
+                
+                    fig = px.bar(
+                        law_incorrect_rate,
+                        x='구분',
+                        y='평균_오답률',
+                        title='법령/비법령 평균 오답률',
+                        text='평균_오답률',
+                        color='평균_오답률',
+                        color_continuous_scale='Reds'
+                    )
+                    fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside', marker_line_color='black', marker_line_width=1.5)
+                    fig.update_layout(height=400, yaxis_title='평균 오답률 (%)', yaxis=dict(range=[0, 100]))
+                    st.plotly_chart(fig, use_container_width=True)
+            
+                # 법령 문제 중 완전 공통 오답
+                st.markdown("#### 📜 " + ("법령 문제 중 완전 공통 오답" if lang == 'ko' else "Law Problems - Complete Gap"))
+            
+                law_complete_gap = law_all_wrong[law_all_wrong['law_status'] == 'O']
+            
+                if len(law_complete_gap) > 0:
+                    st.error(f"""
+                    ⚠️ **법령 공통 오답: {len(law_complete_gap)}개 문제**
+                
+                    모든 모델이 틀린 법령 문제입니다. 법률 용어, 규정 해석, 법적 판단에 대한 
+                    근본적인 지식 부족을 의미합니다.
+                    """)
+                
+                    display_law_gap = pd.DataFrame({
+                        '문제 번호': law_complete_gap['problem_id'],
+                        '과목': law_complete_gap['Subject'],
+                        '연도': law_complete_gap['Year'],
+                        '오답 모델수': law_complete_gap['incorrect_count'].astype(int)
+                    })
+                
+                    st.dataframe(display_law_gap, width='stretch')
+                
+                    if st.checkbox('법령 공통 오답 문제 상세 보기', key='law_gap_details'):
+                        for idx, row in law_complete_gap.head(10).iterrows():
+                            with st.expander(f"📜 {row['problem_id']}"):
+                                q_detail = filtered_df[filtered_df['Question'] == row['Question']].iloc[0]
+                                st.write(f"**문제:** {q_detail['Question']}")
+                            
+                                if '법령 이름' in q_detail and pd.notna(q_detail['법령 이름']):
+                                    st.write(f"**📚 법령:** {q_detail['법령 이름']}")
+                            
+                                if 'Subject' in q_detail and pd.notna(q_detail['Subject']):
+                                    st.write(f"**과목:** {q_detail['Subject']}")
+                            
+                                if all([f'Option {i}' in q_detail for i in range(1, 5)]):
+                                    st.write("**선택지:**")
+                                    for i in range(1, 5):
+                                        option = q_detail[f'Option {i}']
+                                        if pd.notna(option):
+                                            if str(i) == str(row['CorrectAnswer']):
+                                                st.write(f"  ✅ {i}. {option} **(정답)**")
+                                            else:
+                                                st.write(f"  {i}. {option}")
+                            
+                                st.write("**각 모델이 선택한 답:**")
+                                for model, answer in row['selected_answers'].items():
+                                    st.write(f"  • {model}: {answer}")
+                else:
+                    st.success("✅ 모든 모델이 틀린 법령 문제가 없습니다!")
+            
+                # 비법령 문제 중 완전 공통 오답
+                st.markdown("#### 📘 " + ("비법령 문제 중 완전 공통 오답" if lang == 'ko' else "Non-Law Problems - Complete Gap"))
+            
+                non_law_complete_gap = law_all_wrong[law_all_wrong['law_status'] != 'O']
+            
+                if len(non_law_complete_gap) > 0:
+                    st.warning(f"""
+                    ℹ️ **비법령 공통 오답: {len(non_law_complete_gap)}개 문제**
+                
+                    모든 모델이 틀린 비법령 문제입니다. 기술적 지식, 실무 경험, 
+                    전문 용어 이해 등에 대한 격차를 의미합니다.
+                    """)
+                
+                    display_non_law_gap = pd.DataFrame({
+                        '문제 번호': non_law_complete_gap['problem_id'],
+                        '과목': non_law_complete_gap['Subject'],
+                        '연도': non_law_complete_gap['Year'],
+                        '오답 모델수': non_law_complete_gap['incorrect_count'].astype(int)
+                    })
+                
+                    st.dataframe(display_non_law_gap, width='stretch')
+                else:
+                    st.success("✅ 모든 모델이 틀린 비법령 문제가 없습니다!")
+            
+                # 인사이트 및 권장 조치
+                st.markdown("---")
+                st.markdown("#### 💡 " + ("법령/비법령 공통 오답 인사이트" if lang == 'ko' else "Law/Non-Law Gap Insights"))
+            
+                law_gap_count = len(law_complete_gap)
+                non_law_gap_count = len(non_law_complete_gap)
+                law_gap_ratio = (law_gap_count / total_law * 100) if total_law > 0 else 0
+                non_law_gap_ratio = (non_law_gap_count / total_non_law * 100) if total_non_law > 0 else 0
+            
+                col1, col2, col3 = st.columns(3)
+            
+                with col1:
+                    st.metric("법령 공통 오답 비율", f"{law_gap_ratio:.1f}%", f"{law_gap_count}/{total_law}")
+            
+                with col2:
+                    st.metric("비법령 공통 오답 비율", f"{non_law_gap_ratio:.1f}%", f"{non_law_gap_count}/{total_non_law}")
+            
+                with col3:
+                    if law_gap_ratio > non_law_gap_ratio:
+                        st.metric("더 취약한 영역", "법령", f"+{law_gap_ratio - non_law_gap_ratio:.1f}%p")
+                    else:
+                        st.metric("더 취약한 영역", "비법령", f"+{non_law_gap_ratio - law_gap_ratio:.1f}%p")
+            
+                if law_gap_ratio > non_law_gap_ratio * 1.5:
+                    st.error(f"""
+                    🚨 **법령 지식이 특히 취약합니다!**
+                
+                    법령 문제의 공통 오답 비율({law_gap_ratio:.1f}%)이 비법령({non_law_gap_ratio:.1f}%)보다 
+                    {law_gap_ratio / non_law_gap_ratio:.1f}배 높습니다.
+                
+                    **권장 조치**:
+                    - 법률 용어 및 규정에 대한 학습 데이터 보강
+                    - 법령 해석 예시 추가
+                    - 법률 전문가 검토 및 피드백 반영
+                    """)
+                elif non_law_gap_ratio > law_gap_ratio * 1.5:
+                    st.warning(f"""
+                    ⚠️ **기술/실무 지식이 상대적으로 취약합니다!**
+                
+                    비법령 문제의 공통 오답 비율({non_law_gap_ratio:.1f}%)이 법령({law_gap_ratio:.1f}%)보다 
+                    {non_law_gap_ratio / law_gap_ratio:.1f}배 높습니다.
+                
+                    **권장 조치**:
+                    - 기술적 세부사항 학습 데이터 보강
+                    - 실무 사례 및 적용 예시 추가
+                    - 전문 용어 정의 명확화
+                    """)
+                else:
+                    st.success(f"""
+                    ✅ **법령과 비법령 공통 오답가 균형적입니다.**
+                
+                    법령({law_gap_ratio:.1f}%)과 비법령({non_law_gap_ratio:.1f}%) 문제의 
+                    공통 오답 비율이 비슷한 수준입니다.
+                    """)
+        
+            # ========================================
+            # 섹션 10: 오답률 Top 10 차트
+            # ========================================
+            st.markdown("---")
+            top_10_chart = top_20.head(10)
+        
             fig = px.bar(
-                subject_difficulty,
-                x=subj_col,
-                y=avg_diff_col,
-                title='과목별 평균 난이도 (정답률)' if lang == 'ko' else 'Average Difficulty by Subject (Correct Rate)',
-                text=avg_diff_col,
-                color=avg_diff_col,
-                color_continuous_scale='RdYlGn',
-                labels={subj_col: t['by_subject'].replace('별', ''), avg_diff_col: t['avg_difficulty']}
+                top_10_chart,
+                x='problem_id',
+                y='incorrect_rate',
+                title='오답률 높은 문제 Top 10' if lang == 'ko' else 'Top 10 Problems by Incorrect Rate',
+                text=[f"{x:.0%}" for x in top_10_chart['incorrect_rate']],
+                color='incorrect_rate',
+                color_continuous_scale='Reds',
+                range_color=[0, 1]
             )
-            fig.update_traces(
-                texttemplate='%{text:.1f}%',
-                textposition='outside',                textfont=dict(size=annotation_size),
-                marker_line_color='black',
-                marker_line_width=1.5
-            )
-            fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+            fig.update_traces(textposition='outside', marker_line_color='black', marker_line_width=1.5)
             fig.update_layout(
                 height=500,
-                showlegend=False
+                showlegend=False,
+                yaxis_title='오답률',
+                xaxis_title='문제 번호',
+                yaxis=dict(range=[0, 1])
             )
+<<<<<<< HEAD
             st.plotly_chart(fig, width='stretch')
+=======
+            fig.update_xaxes(tickangle=45)
+            st.plotly_chart(fig, use_container_width=True)
+        
+            # ========================================
+            # 섹션 11: 고오답률 & 고일관성 문제 분석 (NEW!)
+            # ========================================
+            st.markdown("---")
+            st.subheader("🎯 " + ("고오답률 & 고일관성 문제 분석" if lang == 'ko' else "High Incorrect Rate & High Consistency Analysis"))
+        
+            st.markdown("""
+            > 💡 **분석 목적**: 오답률 50% 이상이면서 일관성(같은 오답 선택률) 50% 이상인 문제는 
+            > 모델들이 **체계적으로 틀리는** 문제입니다. 이는 학습 데이터의 편향이나 지식 격차를 나타냅니다.
+            """ if lang == 'ko' else """
+            > 💡 **Purpose**: Problems with incorrect rate ≥50% AND consistency ≥50% indicate 
+            > **systematic errors** where models consistently choose the same wrong answer.
+            """)
+        
+            # 문제별 오답률과 일관성 계산
+            problem_stats = filtered_df.groupby('Question').agg({
+                '정답여부': ['sum', 'count', 'mean'],
+                '예측답': lambda x: x.value_counts().iloc[0] / len(x) if len(x) > 0 else 0  # 가장 많이 선택된 답의 비율
+            }).reset_index()
+            problem_stats.columns = ['Question', 'correct_count', 'total_count', 'accuracy', 'top_answer_ratio']
+            problem_stats['incorrect_rate'] = 1 - problem_stats['accuracy']
+        
+            # 오답인 경우의 일관성 (같은 오답을 선택한 비율)
+            consistency_list = []
+            for q in problem_stats['Question']:
+                q_df = filtered_df[filtered_df['Question'] == q]
+                wrong_df = q_df[q_df['정답여부'] == False]
+                if len(wrong_df) > 0:
+                    # 가장 많이 선택된 오답의 비율
+                    wrong_answer_counts = wrong_df['예측답'].value_counts()
+                    if len(wrong_answer_counts) > 0:
+                        consistency = wrong_answer_counts.iloc[0] / len(wrong_df)
+                    else:
+                        consistency = 0
+                else:
+                    consistency = 0
+                consistency_list.append(consistency)
+        
+            problem_stats['wrong_consistency'] = consistency_list
+        
+            # 테스트명 매핑
+            test_mapping = filtered_df.groupby('Question')['테스트명'].first().to_dict()
+            problem_stats['테스트명'] = problem_stats['Question'].map(test_mapping)
+        
+            # 고오답률 & 고일관성 문제 필터링 (오답률 50%+, 일관성 50%+)
+            high_risk = problem_stats[
+                (problem_stats['incorrect_rate'] >= 0.5) & 
+                (problem_stats['wrong_consistency'] >= 0.5)
+            ].copy()
+        
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric(
+                    "전체 문제 수" if lang == 'ko' else "Total Problems",
+                    f"{len(problem_stats):,}"
+                )
+            with col2:
+                st.metric(
+                    "고위험 문제 수" if lang == 'ko' else "High-Risk Problems",
+                    f"{len(high_risk):,}",
+                    f"{len(high_risk)/len(problem_stats)*100:.1f}%" if len(problem_stats) > 0 else "0%"
+                )
+            with col3:
+                avg_consistency = high_risk['wrong_consistency'].mean() * 100 if len(high_risk) > 0 else 0
+                st.metric(
+                    "평균 오답 일관성" if lang == 'ko' else "Avg Wrong Consistency",
+                    f"{avg_consistency:.1f}%"
+                )
+        
+            # ----- 1. 오답률-일관성 구간별 문제 개수 히트맵 -----
+            st.markdown("#### " + ("📊 오답률-일관성 구간별 문제 분포 히트맵" if lang == 'ko' else "📊 Problem Distribution Heatmap by Incorrect Rate & Consistency"))
+        
+            # 5% 구간으로 binning (50~100%)
+            bins = [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.01]
+            bin_labels = ['50-55%', '55-60%', '60-65%', '65-70%', '70-75%', '75-80%', '80-85%', '85-90%', '90-95%', '95-100%']
+        
+            # 오답률 50% 이상, 일관성 50% 이상만 필터링
+            heatmap_data = problem_stats[
+                (problem_stats['incorrect_rate'] >= 0.5) & 
+                (problem_stats['wrong_consistency'] >= 0.5)
+            ].copy()
+        
+            if len(heatmap_data) > 0:
+                heatmap_data['incorrect_bin'] = pd.cut(
+                    heatmap_data['incorrect_rate'], 
+                    bins=bins, 
+                    labels=bin_labels,
+                    include_lowest=True
+                )
+                heatmap_data['consistency_bin'] = pd.cut(
+                    heatmap_data['wrong_consistency'], 
+                    bins=bins, 
+                    labels=bin_labels,
+                    include_lowest=True
+                )
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
             
-            # 과목 × 난이도 구간 히트맵
-            subject_diff_dist = analysis_df.groupby(['Subject', '난이도_구간']).size().reset_index(name='문제수')
-            pivot_subject_diff = subject_diff_dist.pivot(
-                index='Subject',
-                columns='난이도_구간',
-                values='문제수'
-            ).fillna(0)
+                # 피벗 테이블 생성
+                heatmap_pivot = pd.crosstab(
+                    heatmap_data['consistency_bin'], 
+                    heatmap_data['incorrect_bin'],
+                    dropna=False
+                )
             
+                # 모든 구간이 있도록 reindex
+                heatmap_pivot = heatmap_pivot.reindex(index=bin_labels, columns=bin_labels, fill_value=0)
+            
+                # 히트맵 생성
+                fig_heatmap = go.Figure(data=go.Heatmap(
+                    z=heatmap_pivot.values,
+                    x=heatmap_pivot.columns.tolist(),
+                    y=heatmap_pivot.index.tolist(),
+                    colorscale='YlOrRd',
+                    text=heatmap_pivot.values,
+                    texttemplate='%{text}',
+                    textfont={"size": annotation_size},
+                    colorbar=dict(title="문제 수" if lang == 'ko' else "Count"),
+                    hoverongaps=False
+                ))
+            
+                fig_heatmap.update_layout(
+                    title='오답률 vs 일관성 구간별 문제 분포' if lang == 'ko' else 'Problem Distribution: Incorrect Rate vs Consistency',
+                    xaxis_title='오답률 구간' if lang == 'ko' else 'Incorrect Rate Range',
+                    yaxis_title='오답 일관성 구간' if lang == 'ko' else 'Wrong Consistency Range',
+                    height=500,
+                    xaxis=dict(side='bottom'),
+                    yaxis=dict(autorange='reversed')  # 위에서 아래로
+                )
+                fig_heatmap.update_xaxes(tickfont=dict(size=annotation_size))
+                fig_heatmap.update_yaxes(tickfont=dict(size=annotation_size))
+            
+                st.plotly_chart(fig_heatmap, use_container_width=True)
+            
+                # 인사이트
+                max_cell = heatmap_pivot.max().max()
+                max_pos = heatmap_pivot.stack().idxmax()
+                if max_cell > 0:
+                    st.info(f"💡 " + (f"가장 많은 문제가 집중된 구간: 오답률 **{max_pos[1]}**, 일관성 **{max_pos[0]}** ({int(max_cell)}개)" 
+                            if lang == 'ko' else f"Most concentrated: Incorrect Rate **{max_pos[1]}**, Consistency **{max_pos[0]}** ({int(max_cell)} problems)"))
+            else:
+                st.info("오답률 50% 이상이면서 일관성 50% 이상인 문제가 없습니다." if lang == 'ko' else "No problems with both incorrect rate ≥50% and consistency ≥50%.")
+        
+            st.markdown("---")
+        
+            # ----- 2. 테스트셋별 고위험 문제 개수 차트 -----
+            st.markdown("#### " + ("📊 테스트셋별 고위험 문제 분포" if lang == 'ko' else "📊 High-Risk Problems by Test Set"))
+        
+            if len(high_risk) > 0 and '테스트명' in high_risk.columns:
+                # 테스트셋별 고위험 문제 수
+                testset_risk = high_risk.groupby('테스트명').agg({
+                    'Question': 'count',
+                    'incorrect_rate': 'mean',
+                    'wrong_consistency': 'mean'
+                }).reset_index()
+                testset_risk.columns = ['테스트명', '고위험 문제 수', '평균 오답률', '평균 일관성']
+            
+                # 전체 문제 수 대비 비율 계산
+                total_by_test = problem_stats.groupby('테스트명')['Question'].count().to_dict()
+                testset_risk['전체 문제 수'] = testset_risk['테스트명'].map(total_by_test)
+                testset_risk['고위험 비율'] = testset_risk['고위험 문제 수'] / testset_risk['전체 문제 수'] * 100
+            
+                testset_risk = testset_risk.sort_values('고위험 문제 수', ascending=False)
+            
+                # 막대 차트
+                fig_testset = go.Figure()
+            
+                # 고위험 문제 수 막대
+                fig_testset.add_trace(go.Bar(
+                    name='고위험 문제 수' if lang == 'ko' else 'High-Risk Problems',
+                    x=testset_risk['테스트명'],
+                    y=testset_risk['고위험 문제 수'],
+                    text=testset_risk['고위험 문제 수'],
+                    textposition='outside',
+                    textfont=dict(size=annotation_size),
+                    marker_color='#e74c3c',
+                    marker_line_color='black',
+                    marker_line_width=1.5
+                ))
+            
+                fig_testset.update_layout(
+                    title='테스트셋별 고위험 문제 수 (오답률≥50% & 일관성≥50%)' if lang == 'ko' else 'High-Risk Problems by Test Set (Incorrect≥50% & Consistency≥50%)',
+                    xaxis_title='테스트셋' if lang == 'ko' else 'Test Set',
+                    yaxis_title='문제 수' if lang == 'ko' else 'Problem Count',
+                    height=450,
+                    showlegend=False
+                )
+                fig_testset.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                fig_testset.update_yaxes(tickfont=dict(size=annotation_size))
+            
+                st.plotly_chart(fig_testset, use_container_width=True)
+            
+                # 비율 차트
+                st.markdown("##### " + ("고위험 문제 비율 (테스트셋 내)" if lang == 'ko' else "High-Risk Problem Ratio (within Test Set)"))
+            
+                fig_ratio = px.bar(
+                    testset_risk.sort_values('고위험 비율', ascending=False),
+                    x='테스트명',
+                    y='고위험 비율',
+                    text=[f"{x:.1f}%" for x in testset_risk.sort_values('고위험 비율', ascending=False)['고위험 비율']],
+                    color='고위험 비율',
+                    color_continuous_scale='Reds',
+                    title='테스트셋별 고위험 문제 비율' if lang == 'ko' else 'High-Risk Problem Ratio by Test Set'
+                )
+                fig_ratio.update_traces(textposition='outside', textfont=dict(size=annotation_size), marker_line_color='black', marker_line_width=1)
+                fig_ratio.update_layout(
+                    height=400,
+                    showlegend=False,
+                    yaxis_title='비율 (%)' if lang == 'ko' else 'Ratio (%)',
+                    xaxis_title='테스트셋' if lang == 'ko' else 'Test Set',
+                    coloraxis_showscale=False
+                )
+                fig_ratio.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                fig_ratio.update_yaxes(tickfont=dict(size=annotation_size))
+            
+                st.plotly_chart(fig_ratio, use_container_width=True)
+            
+                # 상세 테이블
+                with st.expander("📋 " + ("상세 데이터 보기" if lang == 'ko' else "View Detailed Data")):
+                    display_testset = testset_risk.copy()
+                    display_testset['평균 오답률'] = display_testset['평균 오답률'].apply(lambda x: f"{x*100:.1f}%")
+                    display_testset['평균 일관성'] = display_testset['평균 일관성'].apply(lambda x: f"{x*100:.1f}%")
+                    display_testset['고위험 비율'] = display_testset['고위험 비율'].apply(lambda x: f"{x:.1f}%")
+                
+                    st.dataframe(
+                        display_testset,
+                        use_container_width=True,
+                        hide_index=True
+                    )
+            
+                # 가장 위험한 테스트셋 강조
+                most_risky = testset_risk.iloc[0]
+                st.warning(f"""
+                ⚠️ **가장 주의가 필요한 테스트셋: {most_risky['테스트명']}**
+                - 고위험 문제 수: {int(most_risky['고위험 문제 수'])}개
+                - 평균 오답률: {most_risky['평균 오답률']*100:.1f}%
+                - 평균 오답 일관성: {most_risky['평균 일관성']*100:.1f}%
+                """ if lang == 'ko' else f"""
+                ⚠️ **Test set requiring most attention: {most_risky['테스트명']}**
+                - High-risk problems: {int(most_risky['고위험 문제 수'])}
+                - Avg incorrect rate: {most_risky['평균 오답률']*100:.1f}%
+                - Avg wrong consistency: {most_risky['평균 일관성']*100:.1f}%
+                """)
+            else:
+                st.info("고위험 문제가 없거나 테스트셋 정보가 없습니다." if lang == 'ko' else "No high-risk problems or test set info unavailable.")
+    
+        # 탭 8: 난이도 분석
+        except Exception as e:
+            st.error(f'⚠️ 이 탭에서 오류가 발생했습니다: {type(e).__name__}: {e}')
+            import traceback
+            with st.expander('오류 상세 정보'):
+                st.code(traceback.format_exc())
+    with tabs[7]:
+        try:
+            st.header(f"📈 {t['difficulty_analysis']}")
+        
+            # 문제별 난이도 계산 (정답률 기반)
+            difficulty = filtered_df.groupby('Question').agg({
+                '정답여부': ['sum', 'count', 'mean']
+            }).reset_index()
+            difficulty.columns = ['Question', 'correct_count', 'total_count', 'difficulty_score']
+            difficulty['difficulty_score'] = difficulty['difficulty_score'] * 100
+        
+            # 난이도 구간 분류
+            def classify_difficulty(score, lang='ko'):
+                if lang == 'ko':
+                    if score < 20:
+                        return '매우 어려움 (0-20%)'
+                    elif score < 40:
+                        return '어려움 (20-40%)'
+                    elif score < 60:
+                        return '보통 (40-60%)'
+                    elif score < 80:
+                        return '쉬움 (60-80%)'
+                    else:
+                        return '매우 쉬움 (80-100%)'
+                else:  # English
+                    if score < 20:
+                        return 'Very Hard (0-20%)'
+                    elif score < 40:
+                        return 'Hard (20-40%)'
+                    elif score < 60:
+                        return 'Medium (40-60%)'
+                    elif score < 80:
+                        return 'Easy (60-80%)'
+                    else:
+                        return 'Very Easy (80-100%)'
+        
+            difficulty['난이도_구간'] = difficulty['difficulty_score'].apply(lambda x: classify_difficulty(x, lang))
+        
+            # 난이도 구간 순서 정의 (어려운 것부터 쉬운 것 순)
+            if lang == 'ko':
+                difficulty_order = [
+                    '매우 어려움 (0-20%)',
+                    '어려움 (20-40%)',
+                    '보통 (40-60%)',
+                    '쉬움 (60-80%)',
+                    '매우 쉬움 (80-100%)'
+                ]
+            else:
+                difficulty_order = [
+                    'Very Hard (0-20%)',
+                    'Hard (20-40%)',
+                    'Medium (40-60%)',
+                    'Easy (60-80%)',
+                    'Very Easy (80-100%)'
+                ]
+            difficulty['난이도_구간'] = pd.Categorical(difficulty['난이도_구간'], categories=difficulty_order, ordered=True)
+        
+            # 원본 데이터에 난이도 정보 병합
+            analysis_df = filtered_df.merge(difficulty[['Question', 'difficulty_score', '난이도_구간']], on='Question')
+        
+            # analysis_df에도 동일한 순서 적용
+            analysis_df['난이도_구간'] = pd.Categorical(analysis_df['난이도_구간'], categories=difficulty_order, ordered=True)
+        
+            # 1. 난이도 분포
+            st.subheader("📈 " + (t['problem_distribution'] if 'problem_distribution' in t else ('문제 난이도 분포' if lang == 'ko' else 'Problem Difficulty Distribution')))
+        
+            col1, col2 = st.columns(2)
+        
+            with col1:
+                # 난이도 분포 히스토그램
+                fig = px.histogram(
+                    difficulty,
+                    x='difficulty_score',
+                    nbins=20,
+                    title=t['difficulty_score'] + ' Distribution',
+                    labels={'difficulty_score': t['difficulty_score'], 'count': t['problem_count']}
+                )
+                fig.update_traces(
+                    marker_line_color='black',
+                    marker_line_width=1.5
+                )
+                fig.update_layout(height=400)
+                st.plotly_chart(fig, use_container_width=True)
+        
+            with col2:
+                # 난이도 구간별 문제 수
+                difficulty_dist = difficulty['난이도_구간'].value_counts()
+                # 난이도 순서대로 재정렬
+                difficulty_dist = difficulty_dist.reindex(difficulty_order, fill_value=0)
+            
+                fig = px.bar(
+                    x=difficulty_dist.index,
+                    y=difficulty_dist.values,
+                    title=t['problem_count'] + (' by ' + t['difficulty_range'] if lang == 'en' else ' (' + t['difficulty_range'] + '별)'),
+                    labels={'x': t['difficulty_range'], 'y': t['problem_count']},
+                    text=difficulty_dist.values,
+                    color=difficulty_dist.values,
+                    color_continuous_scale='RdYlGn_r'
+                )
+                fig.update_traces(
+                    texttemplate='%{text}',
+                    textposition='outside',                textfont=dict(size=annotation_size),
+                    marker_line_color='black',
+                    marker_line_width=1.5
+                )
+                fig.update_layout(
+                    height=400,
+                    showlegend=False
+                )
+                fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                st.plotly_chart(fig, use_container_width=True)
+        
+            # 통계 요약
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric(
+                    t['correct_rate'] if lang == 'ko' else 'Average Correct Rate',
+                    f"{difficulty['difficulty_score'].mean():.1f}%"
+                )
+            with col2:
+                st.metric(
+                    '중앙값' if lang == 'ko' else 'Median',
+                    f"{difficulty['difficulty_score'].median():.1f}%"
+                )
+            with col3:
+                very_hard_label = difficulty_order[0]
+                very_hard = len(difficulty[difficulty['난이도_구간'] == very_hard_label])
+                st.metric(
+                    t['very_hard'] + (' 문제' if lang == 'ko' else ' Problems'),
+                    f"{very_hard}" + (t['problems'] if lang == 'ko' else '')
+                )
+            with col4:
+                very_easy_label = difficulty_order[-1]
+                very_easy = len(difficulty[difficulty['난이도_구간'] == very_easy_label])
+                st.metric(
+                    t['very_easy'] + (' 문제' if lang == 'ko' else ' Problems'),
+                    f"{very_easy}" + (t['problems'] if lang == 'ko' else '')
+                )
+        
+            st.markdown("---")
+        
+            # 2. 난이도별 모델 성능
+            st.subheader("🎯 " + ('난이도별 모델 성능' if lang == 'ko' else 'Model Performance by Difficulty Level'))
+        
+            # 모델별 난이도 구간별 정답률
+            model_difficulty = analysis_df.groupby(['모델', '난이도_구간']).agg({
+                '정답여부': ['mean', 'count']
+            }).reset_index()
+        
+            # 컬럼명 언어별 설정
+            if lang == 'ko':
+                model_difficulty.columns = ['모델', '난이도_구간', '정답률', '문제수']
+            else:
+                model_difficulty.columns = ['Model', 'Difficulty', 'Correct Rate', 'Problem Count']
+        
+            # 정답률 컬럼명 (언어별)
+            acc_col = '정답률' if lang == 'ko' else 'Correct Rate'
+            model_col = '모델' if lang == 'ko' else 'Model'
+            diff_col = '난이도_구간' if lang == 'ko' else 'Difficulty'
+        
+            model_difficulty[acc_col] = model_difficulty[acc_col] * 100
+        
+            # 라인 차트
+            fig = px.line(
+                model_difficulty,
+                x=diff_col,
+                y=acc_col,
+                color=model_col,
+                markers=True,
+                title='난이도별 모델 성능 비교' if lang == 'ko' else 'Model Performance by Difficulty Level',
+                labels={
+                    acc_col: t['accuracy'] + ' (%)',
+                    diff_col: t['difficulty_range'],
+                    model_col: t['model']
+                },
+                category_orders={diff_col: difficulty_order}
+            )
+            fig.update_traces(
+                marker_size=10,
+                marker_line_color='black',
+                marker_line_width=2,
+                line_width=3
+            )
+            fig.update_layout(height=500)
+            fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+            st.plotly_chart(fig, use_container_width=True)
+        
+            # 히트맵
+            pivot_difficulty = model_difficulty.pivot(
+                index=model_col,
+                columns=diff_col,
+                values=acc_col
+            )
+        
             # 난이도 순서대로 컬럼 재정렬
-            pivot_subject_diff = pivot_subject_diff.reindex(columns=difficulty_order, fill_value=0)
-            
+            pivot_difficulty = pivot_difficulty.reindex(columns=difficulty_order)
+        
             fig = go.Figure(data=go.Heatmap(
-                z=pivot_subject_diff.values,
-                x=pivot_subject_diff.columns,
-                y=pivot_subject_diff.index,
-                colorscale='Blues',
-                text=pivot_subject_diff.values.astype(int),
-                texttemplate='%{text}',
+                z=pivot_difficulty.values,
+                x=pivot_difficulty.columns,
+                y=pivot_difficulty.index,
+                colorscale='RdYlGn',
+                text=np.round(pivot_difficulty.values, 1),
+                texttemplate='%{text:.1f}',
                 textfont={"size": annotation_size},
-                colorbar=dict(title=t['problem_count']),
+                colorbar=dict(title=t['accuracy'] + " (%)"),
                 xgap=2,  # 셀 경계선
                 ygap=2
             ))
             fig.update_layout(
-                height=500,
-                title='과목 × 난이도 분포' if lang == 'ko' else 'Subject × Difficulty Distribution',
+                height=400,
+                title='모델 × 난이도 히트맵' if lang == 'ko' else 'Model × Difficulty Heatmap',
                 xaxis_title=t['difficulty_range'],
-                yaxis_title=t['by_subject'].replace('별', '')  # '과목' or 'Subject'
+                yaxis_title=t['model']
             )
             fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
             fig.update_yaxes(tickfont=dict(size=annotation_size))
             st.plotly_chart(fig, width='stretch')
         
-        st.markdown("---")
+            # 난이도별 성능 인사이트
+            # 모델별 난이도 적응력 분석
+            difficulty_adaptability = {}
+            for model in pivot_difficulty.index:
+                # 매우 어려운 문제 정확도
+                very_hard_acc = pivot_difficulty.loc[model, difficulty_order[0]] if difficulty_order[0] in pivot_difficulty.columns else 0
+                # 매우 쉬운 문제 정확도
+                very_easy_acc = pivot_difficulty.loc[model, difficulty_order[-1]] if difficulty_order[-1] in pivot_difficulty.columns else 0
+                # 격차 (작을수록 일관적)
+                gap = very_easy_acc - very_hard_acc
+                difficulty_adaptability[model] = {'hard': very_hard_acc, 'easy': very_easy_acc, 'gap': gap}
         
-        # 4. 어려운 문제 vs 쉬운 문제 상세 분석
-        st.subheader("🔍 " + (
-            "어려운 문제 vs 쉬운 문제 비교" if lang == 'ko' else "Hard vs Easy Problems Comparison"
-        ))
+            best_hard_model = max(difficulty_adaptability.items(), key=lambda x: x[1]['hard'])[0]
+            most_consistent_model = min(difficulty_adaptability.items(), key=lambda x: x[1]['gap'])[0]
         
-        col1, col2 = st.columns(2)
+            st.success(f"""
+            💡 **{"난이도별 모델 적응력 분석" if lang == 'ko' else "Model Adaptability by Difficulty"}**:
         
-        with col1:
-            st.markdown("#### " + (
-                "매우 어려운 문제 (정답률 < 20%)" if lang == 'ko' else "Very Hard Problems (Correct Rate < 20%)"
+            🏆 **{"어려운 문제 대응력" if lang == 'ko' else "Hard Problem Performance"}**:
+            - **{"최고" if lang == 'ko' else "Best"}**: {best_hard_model} ({difficulty_adaptability[best_hard_model]['hard']:.1f}% {"매우 어려운 문제에서" if lang == 'ko' else "on very hard"})
+            - **{"특징" if lang == 'ko' else "Note"}**: {"복잡한 추론이 필요한 경우 활용" if lang == 'ko' else "Use for complex reasoning tasks"}
+        
+            ⚖️ **{"일관성" if lang == 'ko' else "Consistency"}**:
+            - **{"가장 일관적" if lang == 'ko' else "Most Consistent"}**: {most_consistent_model} ({"난이도 격차" if lang == 'ko' else "difficulty gap"}: {difficulty_adaptability[most_consistent_model]['gap']:.1f}%p)
+            - **{"의미" if lang == 'ko' else "Meaning"}**: {"모든 난이도에서 안정적 성능" if lang == 'ko' else "Stable across all difficulties"}
+        
+            📊 **{"활용 전략" if lang == 'ko' else "Usage Strategy"}**:
+            - **{"고난도 시험" if lang == 'ko' else "High-difficulty exams"}**: {best_hard_model} {"권장" if lang == 'ko' else "recommended"}
+            - **{"범용 학습" if lang == 'ko' else "General learning"}**: {most_consistent_model} {"권장" if lang == 'ko' else "recommended"}
+            - **{"라인 차트" if lang == 'ko' else "Line chart"}**: {"난이도가 올라갈수록 성능 하락폭 확인" if lang == 'ko' else "Check performance drop as difficulty increases"}
+            """)
+        
+            st.markdown("---")
+        
+            # 3. 과목별 난이도 분석
+            if 'Subject' in analysis_df.columns:
+                st.subheader("📚 " + ('과목별 난이도 분석' if lang == 'ko' else 'Difficulty Analysis by Subject'))
+            
+                subject_difficulty = analysis_df.groupby('Subject').agg({
+                    'difficulty_score': 'mean',
+                    'Question': 'count'
+                }).reset_index()
+            
+                # 컬럼명 언어별 설정
+                if lang == 'ko':
+                    subject_difficulty.columns = ['과목', '평균_난이도', '문제수']
+                    subj_col = '과목'
+                    avg_diff_col = '평균_난이도'
+                else:
+                    subject_difficulty.columns = ['Subject', 'Avg Difficulty', 'Problem Count']
+                    subj_col = 'Subject'
+                    avg_diff_col = 'Avg Difficulty'
+            
+                subject_difficulty = subject_difficulty.sort_values(avg_diff_col)
+            
+                fig = px.bar(
+                    subject_difficulty,
+                    x=subj_col,
+                    y=avg_diff_col,
+                    title='과목별 평균 난이도 (정답률)' if lang == 'ko' else 'Average Difficulty by Subject (Correct Rate)',
+                    text=avg_diff_col,
+                    color=avg_diff_col,
+                    color_continuous_scale='RdYlGn',
+                    labels={subj_col: t['by_subject'].replace('별', ''), avg_diff_col: t['avg_difficulty']}
+                )
+                fig.update_traces(
+                    texttemplate='%{text:.1f}%',
+                    textposition='outside',                textfont=dict(size=annotation_size),
+                    marker_line_color='black',
+                    marker_line_width=1.5
+                )
+                fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                fig.update_layout(
+                    height=500,
+                    showlegend=False
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            
+                # 과목 × 난이도 구간 히트맵
+                subject_diff_dist = analysis_df.groupby(['Subject', '난이도_구간']).size().reset_index(name='문제수')
+                pivot_subject_diff = subject_diff_dist.pivot(
+                    index='Subject',
+                    columns='난이도_구간',
+                    values='문제수'
+                ).fillna(0)
+            
+                # 난이도 순서대로 컬럼 재정렬
+                pivot_subject_diff = pivot_subject_diff.reindex(columns=difficulty_order, fill_value=0)
+            
+                fig = go.Figure(data=go.Heatmap(
+                    z=pivot_subject_diff.values,
+                    x=pivot_subject_diff.columns,
+                    y=pivot_subject_diff.index,
+                    colorscale='Blues',
+                    text=pivot_subject_diff.values.astype(int),
+                    texttemplate='%{text}',
+                    textfont={"size": annotation_size},
+                    colorbar=dict(title=t['problem_count']),
+                    xgap=2,  # 셀 경계선
+                    ygap=2
+                ))
+                fig.update_layout(
+                    height=500,
+                    title='과목 × 난이도 분포' if lang == 'ko' else 'Subject × Difficulty Distribution',
+                    xaxis_title=t['difficulty_range'],
+                    yaxis_title=t['by_subject'].replace('별', '')  # '과목' or 'Subject'
+                )
+                fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                fig.update_yaxes(tickfont=dict(size=annotation_size))
+                st.plotly_chart(fig, use_container_width=True)
+        
+            st.markdown("---")
+        
+            # 4. 어려운 문제 vs 쉬운 문제 상세 분석
+            st.subheader("🔍 " + (
+                "어려운 문제 vs 쉬운 문제 비교" if lang == 'ko' else "Hard vs Easy Problems Comparison"
             ))
-            very_hard_problems = difficulty[difficulty['difficulty_score'] < 20].sort_values('difficulty_score')
+        
+            col1, col2 = st.columns(2)
+        
+            with col1:
+                st.markdown("#### " + (
+                    "매우 어려운 문제 (정답률 < 20%)" if lang == 'ko' else "Very Hard Problems (Correct Rate < 20%)"
+                ))
+                very_hard_problems = difficulty[difficulty['difficulty_score'] < 20].sort_values('difficulty_score')
             
-            if len(very_hard_problems) > 0:
-                st.metric(
-                    t['problem_count'],
-                    f"{len(very_hard_problems)}" + (t['problems'] if lang == 'ko' else '')
-                )
-                st.metric(
-                    '평균 정답률' if lang == 'ko' else 'Average Correct Rate',
-                    f"{very_hard_problems['difficulty_score'].mean():.1f}%"
-                )
-                
-                # 모델별 성능
-                very_hard_questions = very_hard_problems['Question'].tolist()
-                very_hard_model_perf = filtered_df[filtered_df['Question'].isin(very_hard_questions)].groupby('모델')['정답여부'].mean() * 100
-                
-                st.markdown("**" + (
-                    "모델별 성능" if lang == 'ko' else "Performance by Model"
-                ) + "**")
-                for model, acc in very_hard_model_perf.sort_values(ascending=False).items():
-                    st.write(f"- {model}: {acc:.1f}%")
-            else:
-                st.info(
-                    "매우 어려운 문제가 없습니다." if lang == 'ko' else "No very hard problems found."
-                )
-        
-        with col2:
-            st.markdown("#### " + (
-                "매우 쉬운 문제 (정답률 > 80%)" if lang == 'ko' else "Very Easy Problems (Correct Rate > 80%)"
-            ))
-            very_easy_problems = difficulty[difficulty['difficulty_score'] > 80].sort_values('difficulty_score', ascending=False)
-            
-            if len(very_easy_problems) > 0:
-                st.metric(
-                    t['problem_count'],
-                    f"{len(very_easy_problems)}" + (t['problems'] if lang == 'ko' else '')
-                )
-                st.metric(
-                    '평균 정답률' if lang == 'ko' else 'Average Correct Rate',
-                    f"{very_easy_problems['difficulty_score'].mean():.1f}%"
-                )
-                
-                # 모델별 성능
-                very_easy_questions = very_easy_problems['Question'].tolist()
-                very_easy_model_perf = filtered_df[filtered_df['Question'].isin(very_easy_questions)].groupby('모델')['정답여부'].mean() * 100
-                
-                st.markdown("**" + (
-                    "모델별 성능" if lang == 'ko' else "Performance by Model"
-                ) + "**")
-                for model, acc in very_easy_model_perf.sort_values(ascending=False).items():
-                    st.write(f"- {model}: {acc:.1f}%")
-            else:
-                st.info(
-                    "매우 쉬운 문제가 없습니다." if lang == 'ko' else "No very easy problems found."
-                )
-        
-        st.markdown("---")
-        
-        # 5. 난이도 구간별 상세 테이블
-        st.subheader("📋 " + t['difficulty_stats_by_range'])
-        
-        detailed_difficulty = model_difficulty.pivot_table(
-            index=model_col,
-            columns=diff_col,
-            values=acc_col,
-            aggfunc='mean'
-        ).round(2)
-        
-        # 난이도 순서대로 컬럼 재정렬
-        detailed_difficulty = detailed_difficulty.reindex(columns=difficulty_order)
-        
-        st.dataframe(
-            detailed_difficulty.style.background_gradient(cmap='RdYlGn', axis=None),
-            width='stretch'
-        )
-        
-        # 난이도 분석 종합 인사이트
-        # 전체 문제 난이도 분포 분석
-        total_problems = len(difficulty)
-        very_hard_pct = (len(difficulty[difficulty['difficulty_score'] < 20]) / total_problems * 100) if total_problems > 0 else 0
-        hard_pct = (len(difficulty[(difficulty['difficulty_score'] >= 20) & (difficulty['difficulty_score'] < 40)]) / total_problems * 100) if total_problems > 0 else 0
-        medium_pct = (len(difficulty[(difficulty['difficulty_score'] >= 40) & (difficulty['difficulty_score'] < 60)]) / total_problems * 100) if total_problems > 0 else 0
-        easy_pct = (len(difficulty[(difficulty['difficulty_score'] >= 60) & (difficulty['difficulty_score'] < 80)]) / total_problems * 100) if total_problems > 0 else 0
-        very_easy_pct = (len(difficulty[difficulty['difficulty_score'] >= 80]) / total_problems * 100) if total_problems > 0 else 0
-        
-        st.info(f"""
-        💡 **{"난이도 분포 종합 분석" if lang == 'ko' else "Overall Difficulty Distribution"}**:
-        
-        📊 **{"문제 난이도 구성" if lang == 'ko' else "Problem Composition"}**:
-        - **{"매우 어려움" if lang == 'ko' else "Very Hard"}**: {very_hard_pct:.1f}% ({len(difficulty[difficulty['difficulty_score'] < 20])}{"개" if lang == 'ko' else ""})
-        - **{"어려움" if lang == 'ko' else "Hard"}**: {hard_pct:.1f}% ({len(difficulty[(difficulty['difficulty_score'] >= 20) & (difficulty['difficulty_score'] < 40)])}{"개" if lang == 'ko' else ""})
-        - **{"보통" if lang == 'ko' else "Medium"}**: {medium_pct:.1f}% ({len(difficulty[(difficulty['difficulty_score'] >= 40) & (difficulty['difficulty_score'] < 60)])}{"개" if lang == 'ko' else ""})
-        - **{"쉬움" if lang == 'ko' else "Easy"}**: {easy_pct:.1f}% ({len(difficulty[(difficulty['difficulty_score'] >= 60) & (difficulty['difficulty_score'] < 80)])}{"개" if lang == 'ko' else ""})
-        - **{"매우 쉬움" if lang == 'ko' else "Very Easy"}**: {very_easy_pct:.1f}% ({len(difficulty[difficulty['difficulty_score'] >= 80])}{"개" if lang == 'ko' else ""})
-        
-        🎯 **{"변별력 평가" if lang == 'ko' else "Discriminatory Power"}**:
-        - {"중간 난이도(40-60%)" if lang == 'ko' else "Medium difficulty (40-60%)"}: {medium_pct:.1f}% - {"이상적 변별력 구간" if lang == 'ko' else "Ideal discriminatory range"}
-        - {"변별력" if lang == 'ko' else "Overall discriminatory power"}: {"우수" if medium_pct > 30 else "보통" if medium_pct > 20 else "개선 필요" if lang == 'ko' else "Good" if medium_pct > 30 else "Fair" if medium_pct > 20 else "Needs improvement"}
-        
-        📝 **{"학습 전략" if lang == 'ko' else "Study Strategy"}**:
-        - **{"기초 다지기" if lang == 'ko' else "Foundation"}**: {"쉬운 문제로 개념 확립" if lang == 'ko' else "Master basics with easy problems"}
-        - **{"실력 향상" if lang == 'ko' else "Improvement"}**: {"중간 난이도로 실전 대비" if lang == 'ko' else "Practice with medium problems"}
-        - **{"심화 학습" if lang == 'ko' else "Advanced"}**: {"어려운 문제로 고득점 노리기" if lang == 'ko' else "Challenge with hard problems"}
-        """)
-    
-    # 탭 9: 토큰 및 비용 분석
-    with tabs[8]:
-        st.header(f"💰 {t['token_cost_analysis']}")
-        
-        # 토큰 관련 컬럼 확인
-        token_columns = {
-            'input': ['입력토큰', 'input_tokens', 'Input Tokens'],
-            'output': ['출력토큰', 'output_tokens', 'Output Tokens'],
-            'total': ['총토큰', 'total_tokens', 'Total Tokens'],
-            'cost': ['비용수준', 'cost_level', 'Cost Level']
-        }
-        
-        # 사용 가능한 컬럼 찾기
-        available_cols = {}
-        for key, possible_names in token_columns.items():
-            for col_name in possible_names:
-                if col_name in filtered_df.columns:
-                    available_cols[key] = col_name
-                    break
-        
-        if not available_cols:
-            st.info("Token usage data not available in the dataset." if lang == 'en' else "토큰 사용량 데이터가 데이터셋에 없습니다.")
-        else:
-            # 데이터 준비 - NaN 필터링을 한 번에 처리 (copy 제거)
-            valid_mask = pd.Series(True, index=filtered_df.index)
-            for key, col in available_cols.items():
-                if col in filtered_df.columns:
-                    valid_mask &= filtered_df[col].notna()
-            
-            token_df = filtered_df[valid_mask]
-            
-            if len(token_df) == 0:
-                st.info("No valid token data available after filtering." if lang == 'en' else "필터링 후 유효한 토큰 데이터가 없습니다.")
-            else:
-                # 1. 토큰 통계 요약
-                st.subheader(f"📊 {t['token_stats']}")
-                
-                # 모델별 토큰 사용량 계산
-                agg_dict = {}
-                if 'input' in available_cols:
-                    agg_dict[available_cols['input']] = ['sum', 'mean']
-                if 'output' in available_cols:
-                    agg_dict[available_cols['output']] = ['sum', 'mean']
-                if 'total' in available_cols:
-                    agg_dict[available_cols['total']] = ['sum', 'mean']
-                
-                model_token_stats = token_df.groupby('모델').agg(agg_dict).reset_index()
-                
-                # 컬럼명 정리
-                new_cols = ['모델']
-                for col in model_token_stats.columns[1:]:
-                    if col[0] == available_cols.get('input', ''):
-                        if col[1] == 'sum':
-                            new_cols.append('총_입력토큰')
-                        else:
-                            new_cols.append('평균_입력토큰')
-                    elif col[0] == available_cols.get('output', ''):
-                        if col[1] == 'sum':
-                            new_cols.append('총_출력토큰')
-                        else:
-                            new_cols.append('평균_출력토큰')
-                    elif col[0] == available_cols.get('total', ''):
-                        if col[1] == 'sum':
-                            new_cols.append('총_토큰')
-                        else:
-                            new_cols.append('평균_토큰')
-                
-                model_token_stats.columns = new_cols
-                
-                # 정확도 추가
-                model_acc = token_df.groupby('모델')['정답여부'].mean().reset_index()
-                model_acc.columns = ['모델', '정확도']
-                model_acc['정확도'] = model_acc['정확도'] * 100
-                
-                model_token_stats = model_token_stats.merge(model_acc, on='모델')
-                
-                # 문제 수 추가
-                model_problem_count = token_df.groupby('모델')['Question'].count().reset_index()
-                model_problem_count.columns = ['모델', '문제수']
-                model_token_stats = model_token_stats.merge(model_problem_count, on='모델')
-                
-                # 비용 수준 추가 (있는 경우)
-                if 'cost' in available_cols:
-                    cost_col = available_cols['cost']
-                    # 가장 빈번한 비용 수준 찾기
-                    model_cost = token_df.groupby('모델')[cost_col].agg(lambda x: x.mode()[0] if len(x.mode()) > 0 else 'unknown').reset_index()
-                    model_cost.columns = ['모델', '비용수준']
-                    model_token_stats = model_token_stats.merge(model_cost, on='모델')
-                
-                # 토큰 효율성 계산 (정답당 토큰)
-                if '총_토큰' in model_token_stats.columns:
-                    model_token_stats['정답당_토큰'] = model_token_stats.apply(
-                        lambda row: row['총_토큰'] / (row['문제수'] * row['정확도'] / 100) if row['정확도'] > 0 else 0,
-                        axis=1
+                if len(very_hard_problems) > 0:
+                    st.metric(
+                        t['problem_count'],
+                        f"{len(very_hard_problems)}" + (t['problems'] if lang == 'ko' else '')
+                    )
+                    st.metric(
+                        '평균 정답률' if lang == 'ko' else 'Average Correct Rate',
+                        f"{very_hard_problems['difficulty_score'].mean():.1f}%"
                     )
                 
-                # 주요 메트릭 표시
-                col1, col2, col3, col4 = st.columns(4)
+                    # 모델별 성능
+                    very_hard_questions = very_hard_problems['Question'].tolist()
+                    very_hard_model_perf = filtered_df[filtered_df['Question'].isin(very_hard_questions)].groupby('모델')['정답여부'].mean() * 100
                 
-                with col1:
+                    st.markdown("**" + (
+                        "모델별 성능" if lang == 'ko' else "Performance by Model"
+                    ) + "**")
+                    for model, acc in very_hard_model_perf.sort_values(ascending=False).items():
+                        st.write(f"- {model}: {acc:.1f}%")
+                else:
+                    st.info(
+                        "매우 어려운 문제가 없습니다." if lang == 'ko' else "No very hard problems found."
+                    )
+        
+            with col2:
+                st.markdown("#### " + (
+                    "매우 쉬운 문제 (정답률 > 80%)" if lang == 'ko' else "Very Easy Problems (Correct Rate > 80%)"
+                ))
+                very_easy_problems = difficulty[difficulty['difficulty_score'] > 80].sort_values('difficulty_score', ascending=False)
+            
+                if len(very_easy_problems) > 0:
+                    st.metric(
+                        t['problem_count'],
+                        f"{len(very_easy_problems)}" + (t['problems'] if lang == 'ko' else '')
+                    )
+                    st.metric(
+                        '평균 정답률' if lang == 'ko' else 'Average Correct Rate',
+                        f"{very_easy_problems['difficulty_score'].mean():.1f}%"
+                    )
+                
+                    # 모델별 성능
+                    very_easy_questions = very_easy_problems['Question'].tolist()
+                    very_easy_model_perf = filtered_df[filtered_df['Question'].isin(very_easy_questions)].groupby('모델')['정답여부'].mean() * 100
+                
+                    st.markdown("**" + (
+                        "모델별 성능" if lang == 'ko' else "Performance by Model"
+                    ) + "**")
+                    for model, acc in very_easy_model_perf.sort_values(ascending=False).items():
+                        st.write(f"- {model}: {acc:.1f}%")
+                else:
+                    st.info(
+                        "매우 쉬운 문제가 없습니다." if lang == 'ko' else "No very easy problems found."
+                    )
+        
+            st.markdown("---")
+        
+            # 5. 난이도 구간별 상세 테이블
+            st.subheader("📋 " + t['difficulty_stats_by_range'])
+        
+            detailed_difficulty = model_difficulty.pivot_table(
+                index=model_col,
+                columns=diff_col,
+                values=acc_col,
+                aggfunc='mean'
+            ).round(2)
+        
+            # 난이도 순서대로 컬럼 재정렬
+            detailed_difficulty = detailed_difficulty.reindex(columns=difficulty_order)
+        
+            st.dataframe(
+                detailed_difficulty.style.background_gradient(cmap='RdYlGn', axis=None),
+                width='stretch'
+            )
+        
+            # 난이도 분석 종합 인사이트
+            # 전체 문제 난이도 분포 분석
+            total_problems = len(difficulty)
+            very_hard_pct = (len(difficulty[difficulty['difficulty_score'] < 20]) / total_problems * 100) if total_problems > 0 else 0
+            hard_pct = (len(difficulty[(difficulty['difficulty_score'] >= 20) & (difficulty['difficulty_score'] < 40)]) / total_problems * 100) if total_problems > 0 else 0
+            medium_pct = (len(difficulty[(difficulty['difficulty_score'] >= 40) & (difficulty['difficulty_score'] < 60)]) / total_problems * 100) if total_problems > 0 else 0
+            easy_pct = (len(difficulty[(difficulty['difficulty_score'] >= 60) & (difficulty['difficulty_score'] < 80)]) / total_problems * 100) if total_problems > 0 else 0
+            very_easy_pct = (len(difficulty[difficulty['difficulty_score'] >= 80]) / total_problems * 100) if total_problems > 0 else 0
+        
+            st.info(f"""
+            💡 **{"난이도 분포 종합 분석" if lang == 'ko' else "Overall Difficulty Distribution"}**:
+        
+            📊 **{"문제 난이도 구성" if lang == 'ko' else "Problem Composition"}**:
+            - **{"매우 어려움" if lang == 'ko' else "Very Hard"}**: {very_hard_pct:.1f}% ({len(difficulty[difficulty['difficulty_score'] < 20])}{"개" if lang == 'ko' else ""})
+            - **{"어려움" if lang == 'ko' else "Hard"}**: {hard_pct:.1f}% ({len(difficulty[(difficulty['difficulty_score'] >= 20) & (difficulty['difficulty_score'] < 40)])}{"개" if lang == 'ko' else ""})
+            - **{"보통" if lang == 'ko' else "Medium"}**: {medium_pct:.1f}% ({len(difficulty[(difficulty['difficulty_score'] >= 40) & (difficulty['difficulty_score'] < 60)])}{"개" if lang == 'ko' else ""})
+            - **{"쉬움" if lang == 'ko' else "Easy"}**: {easy_pct:.1f}% ({len(difficulty[(difficulty['difficulty_score'] >= 60) & (difficulty['difficulty_score'] < 80)])}{"개" if lang == 'ko' else ""})
+            - **{"매우 쉬움" if lang == 'ko' else "Very Easy"}**: {very_easy_pct:.1f}% ({len(difficulty[difficulty['difficulty_score'] >= 80])}{"개" if lang == 'ko' else ""})
+        
+            🎯 **{"변별력 평가" if lang == 'ko' else "Discriminatory Power"}**:
+            - {"중간 난이도(40-60%)" if lang == 'ko' else "Medium difficulty (40-60%)"}: {medium_pct:.1f}% - {"이상적 변별력 구간" if lang == 'ko' else "Ideal discriminatory range"}
+            - {"변별력" if lang == 'ko' else "Overall discriminatory power"}: {"우수" if medium_pct > 30 else "보통" if medium_pct > 20 else "개선 필요" if lang == 'ko' else "Good" if medium_pct > 30 else "Fair" if medium_pct > 20 else "Needs improvement"}
+        
+            📝 **{"학습 전략" if lang == 'ko' else "Study Strategy"}**:
+            - **{"기초 다지기" if lang == 'ko' else "Foundation"}**: {"쉬운 문제로 개념 확립" if lang == 'ko' else "Master basics with easy problems"}
+            - **{"실력 향상" if lang == 'ko' else "Improvement"}**: {"중간 난이도로 실전 대비" if lang == 'ko' else "Practice with medium problems"}
+            - **{"심화 학습" if lang == 'ko' else "Advanced"}**: {"어려운 문제로 고득점 노리기" if lang == 'ko' else "Challenge with hard problems"}
+            """)
+    
+        # 탭 9: 토큰 및 비용 분석
+        except Exception as e:
+            st.error(f'⚠️ 이 탭에서 오류가 발생했습니다: {type(e).__name__}: {e}')
+            import traceback
+            with st.expander('오류 상세 정보'):
+                st.code(traceback.format_exc())
+    with tabs[8]:
+        try:
+            st.header(f"💰 {t['token_cost_analysis']}")
+        
+            # 토큰 관련 컬럼 확인
+            token_columns = {
+                'input': ['입력토큰', 'input_tokens', 'Input Tokens'],
+                'output': ['출력토큰', 'output_tokens', 'Output Tokens'],
+                'total': ['총토큰', 'total_tokens', 'Total Tokens'],
+                'cost': ['비용수준', 'cost_level', 'Cost Level']
+            }
+        
+            # 사용 가능한 컬럼 찾기
+            available_cols = {}
+            for key, possible_names in token_columns.items():
+                for col_name in possible_names:
+                    if col_name in filtered_df.columns:
+                        available_cols[key] = col_name
+                        break
+        
+            if not available_cols:
+                st.info("Token usage data not available in the dataset." if lang == 'en' else "토큰 사용량 데이터가 데이터셋에 없습니다.")
+            else:
+                # 데이터 준비 - NaN 필터링을 한 번에 처리 (copy 제거)
+                valid_mask = pd.Series(True, index=filtered_df.index)
+                for key, col in available_cols.items():
+                    if col in filtered_df.columns:
+                        valid_mask &= filtered_df[col].notna()
+            
+                token_df = filtered_df[valid_mask]
+            
+                if len(token_df) == 0:
+                    st.info("No valid token data available after filtering." if lang == 'en' else "필터링 후 유효한 토큰 데이터가 없습니다.")
+                else:
+                    # 1. 토큰 통계 요약
+                    st.subheader(f"📊 {t['token_stats']}")
+                
+                    # 모델별 토큰 사용량 계산
+                    agg_dict = {}
+                    if 'input' in available_cols:
+                        agg_dict[available_cols['input']] = ['sum', 'mean']
+                    if 'output' in available_cols:
+                        agg_dict[available_cols['output']] = ['sum', 'mean']
+                    if 'total' in available_cols:
+                        agg_dict[available_cols['total']] = ['sum', 'mean']
+                
+                    model_token_stats = token_df.groupby('모델').agg(agg_dict).reset_index()
+                
+                    # 컬럼명 정리
+                    new_cols = ['모델']
+                    for col in model_token_stats.columns[1:]:
+                        if col[0] == available_cols.get('input', ''):
+                            if col[1] == 'sum':
+                                new_cols.append('총_입력토큰')
+                            else:
+                                new_cols.append('평균_입력토큰')
+                        elif col[0] == available_cols.get('output', ''):
+                            if col[1] == 'sum':
+                                new_cols.append('총_출력토큰')
+                            else:
+                                new_cols.append('평균_출력토큰')
+                        elif col[0] == available_cols.get('total', ''):
+                            if col[1] == 'sum':
+                                new_cols.append('총_토큰')
+                            else:
+                                new_cols.append('평균_토큰')
+                
+                    model_token_stats.columns = new_cols
+                
+                    # 정확도 추가
+                    model_acc = token_df.groupby('모델')['정답여부'].mean().reset_index()
+                    model_acc.columns = ['모델', '정확도']
+                    model_acc['정확도'] = model_acc['정확도'] * 100
+                
+                    model_token_stats = model_token_stats.merge(model_acc, on='모델')
+                
+                    # 문제 수 추가
+                    model_problem_count = token_df.groupby('모델')['Question'].count().reset_index()
+                    model_problem_count.columns = ['모델', '문제수']
+                    model_token_stats = model_token_stats.merge(model_problem_count, on='모델')
+                
+                    # 비용 수준 추가 (있는 경우)
+                    if 'cost' in available_cols:
+                        cost_col = available_cols['cost']
+                        # 가장 빈번한 비용 수준 찾기
+                        model_cost = token_df.groupby('모델')[cost_col].agg(lambda x: x.mode()[0] if len(x.mode()) > 0 else 'unknown').reset_index()
+                        model_cost.columns = ['모델', '비용수준']
+                        model_token_stats = model_token_stats.merge(model_cost, on='모델')
+                
+                    # 토큰 효율성 계산 (정답당 토큰)
                     if '총_토큰' in model_token_stats.columns:
-                        total_tokens = model_token_stats['총_토큰'].sum()
-                        st.metric(
-                            t['total_tokens'],
-                            f"{total_tokens:,.0f}"
+                        model_token_stats['정답당_토큰'] = model_token_stats.apply(
+                            lambda row: row['총_토큰'] / (row['문제수'] * row['정확도'] / 100) if row['정확도'] > 0 else 0,
+                            axis=1
                         )
                 
-                with col2:
-                    if '평균_토큰' in model_token_stats.columns:
-                        avg_tokens = model_token_stats['평균_토큰'].mean()
-                        st.metric(
-                            t['avg_tokens_per_problem'],
-                            f"{avg_tokens:,.0f}"
-                        )
+                    # 주요 메트릭 표시
+                    col1, col2, col3, col4 = st.columns(4)
                 
+<<<<<<< HEAD
                 with col3:
                     if '총_입력토큰' in model_token_stats.columns and '총_출력토큰' in model_token_stats.columns:
                         total_input = model_token_stats['총_입력토큰'].sum()
@@ -5426,29 +6620,534 @@ def main():
                         fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
                         st.plotly_chart(fig, width='stretch')
                     
+=======
+                    with col1:
+                        if '총_토큰' in model_token_stats.columns:
+                            total_tokens = model_token_stats['총_토큰'].sum()
+                            st.metric(
+                                t['total_tokens'],
+                                f"{total_tokens:,.0f}"
+                            )
+                
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                     with col2:
-                        # 토큰 vs 정확도 산점도
                         if '평균_토큰' in model_token_stats.columns:
-                            fig = px.scatter(
+                            avg_tokens = model_token_stats['평균_토큰'].mean()
+                            st.metric(
+                                t['avg_tokens_per_problem'],
+                                f"{avg_tokens:,.0f}"
+                            )
+                
+                    with col3:
+                        if '총_입력토큰' in model_token_stats.columns and '총_출력토큰' in model_token_stats.columns:
+                            total_input = model_token_stats['총_입력토큰'].sum()
+                            total_output = model_token_stats['총_출력토큰'].sum()
+                            io_ratio = total_input / total_output if total_output > 0 else 0
+                            st.metric(
+                                t['io_ratio'],
+                                f"{io_ratio:.2f}:1"
+                            )
+                
+                    with col4:
+                        if '정답당_토큰' in model_token_stats.columns and len(model_token_stats[model_token_stats['정답당_토큰'] > 0]) > 0:
+                            # 가장 효율적인 모델 (정답당 토큰이 적은 모델)
+                            valid_stats = model_token_stats[model_token_stats['정답당_토큰'] > 0]
+                            most_efficient = valid_stats.loc[valid_stats['정답당_토큰'].idxmin()]
+                            st.metric(
+                                t['most_efficient'],
+                                most_efficient['모델'],
+                                f"{most_efficient['정답당_토큰']:,.0f} " + t['tokens']
+                            )
+                
+                    # 상세 테이블
+                    st.markdown("---")
+                    st.subheader("📋 " + ("모델별 토큰 사용량 상세" if lang == 'ko' else "Detailed Token Usage by Model"))
+                
+                    # 컬럼 순서 정리
+                    display_cols = ['모델']
+                    if '총_입력토큰' in model_token_stats.columns:
+                        display_cols.append('총_입력토큰')
+                    if '총_출력토큰' in model_token_stats.columns:
+                        display_cols.append('총_출력토큰')
+                    if '총_토큰' in model_token_stats.columns:
+                        display_cols.append('총_토큰')
+                    if '평균_토큰' in model_token_stats.columns:
+                        display_cols.append('평균_토큰')
+                    display_cols.extend(['정확도', '문제수'])
+                    if '비용수준' in model_token_stats.columns:
+                        display_cols.append('비용수준')
+                    if '정답당_토큰' in model_token_stats.columns:
+                        display_cols.append('정답당_토큰')
+                
+                    display_df = model_token_stats[display_cols].sort_values('총_토큰' if '총_토큰' in display_cols else '모델', ascending=False)
+                
+                    # 포맷팅
+                    format_dict = {
+                        '총_입력토큰': '{:,.0f}',
+                        '총_출력토큰': '{:,.0f}',
+                        '총_토큰': '{:,.0f}',
+                        '평균_토큰': '{:,.0f}',
+                        '정확도': '{:.2f}%',
+                        '정답당_토큰': '{:,.0f}'
+                    }
+                
+                    st.dataframe(
+                        display_df.style.format(format_dict).background_gradient(
+                            subset=['정답당_토큰'] if '정답당_토큰' in display_cols else [],
+                            cmap='RdYlGn_r'
+                        ),
+                        width='stretch'
+                    )
+                
+                    st.markdown("---")
+                
+                    # 2. 시각화
+                    st.subheader("📊 " + ("토큰 사용량 시각화" if lang == 'ko' else "Token Usage Visualization"))
+                
+                    col1, col2 = st.columns(2)
+                
+                    with col1:
+                        # 모델별 총 토큰 사용량
+                        if '총_토큰' in model_token_stats.columns:
+                            fig = px.bar(
                                 display_df,
-                                x='평균_토큰',
-                                y='정확도',
-                                size='문제수',
-                                text='모델',
-                                title=t['token_efficiency'] + ' vs ' + t['accuracy'],
-                                labels={
-                                    '평균_토큰': t['avg_tokens_per_problem'],
-                                    '정확도': t['accuracy'] + ' (%)'
-                                }
+                                x='모델',
+                                y='총_토큰',
+                                title=t['total_tokens'] + ' (' + ('모델별' if lang == 'ko' else 'by Model') + ')',
+                                text='총_토큰',
+                                color='총_토큰',
+                                color_continuous_scale='Blues'
                             )
                             fig.update_traces(
-                                textposition='top center',
-                                marker=dict(
-                                    line=dict(width=2, color='black'),
-                                    opacity=0.7
+                                texttemplate='%{text:,.0f}',
+                                textposition='outside',                textfont=dict(size=annotation_size),
+                                marker_line_color='black',
+                                marker_line_width=1.5
+                            )
+                            fig.update_layout(
+                                height=400,
+                                showlegend=False,
+                                yaxis_title=t['total_tokens'],
+                                xaxis_title=t['model']
+                            )
+                            fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                            st.plotly_chart(fig, use_container_width=True)
+                
+                    with col2:
+                        # 입출력 토큰 비교
+                        if '총_입력토큰' in model_token_stats.columns and '총_출력토큰' in model_token_stats.columns:
+                            fig = go.Figure()
+                            fig.add_trace(go.Bar(
+                                name=t['input_tokens'],
+                                x=display_df['모델'],
+                                y=display_df['총_입력토큰'],
+                                marker_color='lightblue',
+                                marker_line_color='black',
+                                marker_line_width=1.5
+                            ))
+                            fig.add_trace(go.Bar(
+                                name=t['output_tokens'],
+                                x=display_df['모델'],
+                                y=display_df['총_출력토큰'],
+                                marker_color='lightcoral',
+                                marker_line_color='black',
+                                marker_line_width=1.5
+                            ))
+                        
+                            fig.update_layout(
+                                barmode='stack',
+                                title=f"{t['input_tokens']} vs {t['output_tokens']}",
+                                height=400,
+                                yaxis_title=t['tokens'],
+                                xaxis_title=t['model']
+                            )
+                            fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                            st.plotly_chart(fig, use_container_width=True)
+                
+                    st.markdown("---")
+                
+                    # 3. 토큰 효율성 분석
+                    if '정답당_토큰' in model_token_stats.columns:
+                        st.subheader("🎯 " + (t['token_efficiency']))
+                    
+                        col1, col2 = st.columns(2)
+                    
+                        with col1:
+                            # 정답당 토큰 사용량
+                            fig = px.bar(
+                                display_df.sort_values('정답당_토큰'),
+                                x='모델',
+                                y='정답당_토큰',
+                                title=t['token_per_correct'],
+                                text='정답당_토큰',
+                                color='정답당_토큰',
+                                color_continuous_scale='RdYlGn_r'
+                            )
+                            fig.update_traces(
+                                texttemplate='%{text:,.0f}',
+                                textposition='outside',                textfont=dict(size=annotation_size),
+                                marker_line_color='black',
+                                marker_line_width=1.5
+                            )
+                            fig.update_layout(
+                                height=400,
+                                showlegend=False,
+                                yaxis_title=t['tokens'] + ' / ' + t['correct'],
+                                xaxis_title=t['model']
+                            )
+                            fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                            st.plotly_chart(fig, use_container_width=True)
+                    
+                        with col2:
+                            # 토큰 vs 정확도 산점도
+                            if '평균_토큰' in model_token_stats.columns:
+                                fig = px.scatter(
+                                    display_df,
+                                    x='평균_토큰',
+                                    y='정확도',
+                                    size='문제수',
+                                    text='모델',
+                                    title=t['token_efficiency'] + ' vs ' + t['accuracy'],
+                                    labels={
+                                        '평균_토큰': t['avg_tokens_per_problem'],
+                                        '정확도': t['accuracy'] + ' (%)'
+                                    }
                                 )
+                                fig.update_traces(
+                                    textposition='top center',
+                                    marker=dict(
+                                        line=dict(width=2, color='black'),
+                                        opacity=0.7
+                                    )
+                                )
+                                fig.update_layout(height=400)
+                                st.plotly_chart(fig, use_container_width=True)
+                
+                    st.markdown("---")
+                
+                    # 4. 비용 분석 (비용 수준 데이터가 있는 경우)
+                    if 'cost' in available_cols:
+                        st.subheader("💵 " + t['cost_analysis'])
+                    
+                        cost_col = available_cols['cost']
+                    
+                        # 🔍 디버깅 정보 (펼치기/접기)
+                        with st.expander("🔍 " + ("비용 데이터 확인" if lang == 'ko' else "Check Cost Data")):
+                            st.write("**" + ("원본 비용 수준 값" if lang == 'ko' else "Original Cost Level Values") + ":**")
+                            original_values = filtered_df[cost_col].unique().tolist()
+                            st.write(f"고유 값: {original_values}")
+                            st.write(f"개수: {len(original_values)}")
+                    
+                        # 비용 수준을 정규화 및 순서 정의
+                        def normalize_cost_level(level):
+                            if pd.isna(level):
+                                return 'unknown'
+                            level_str = str(level).lower().strip()
+                            # 무료/로컬 모델
+                            if level_str in ['무료', 'free', 'f', '0', 'local', 'localhost', '로컬']:
+                                return t['free']
+                            # 매우 낮음
+                            elif level_str in ['매우낮음', 'very low', 'very_low', 'vl', 'verylow']:
+                                return t['very_low']
+                            # 낮음
+                            elif level_str in ['낮음', 'low', 'l']:
+                                return t['low']
+                            # 중간
+                            elif level_str in ['중간', 'medium', 'mid', 'm']:
+                                return t['medium_cost']
+                            # 높음
+                            elif level_str in ['높음', 'high', 'h']:
+                                return t['high']
+                            return level
+                    
+                        # 비용 순서 정의 (무료 → 매우낮음 → 낮음 → 중간 → 높음)
+                        cost_order = [t['free'], t['very_low'], t['low'], t['medium_cost'], t['high']]
+                    
+                        token_df['비용수준_정규화'] = token_df[cost_col].apply(normalize_cost_level)
+                        model_token_stats['비용수준_정규화'] = model_token_stats['비용수준'].apply(normalize_cost_level) if '비용수준' in model_token_stats.columns else t['medium_cost']
+                    
+                        # 🔍 정규화 후 값 확인
+                        with st.expander("🔍 " + ("정규화 후 비용 수준 값" if lang == 'ko' else "Normalized Cost Level Values")):
+                            normalized_values = token_df['비용수준_정규화'].unique().tolist()
+                            st.write(f"**정규화된 고유 값**: {normalized_values}")
+                            st.write(f"**정의된 순서 (cost_order)**: {cost_order}")
+                        
+                            # 순서에 없는 값 확인
+                            unexpected = [v for v in normalized_values if v not in cost_order]
+                            if unexpected:
+                                st.warning(f"⚠️ 정의된 순서에 없는 값: {unexpected}")
+                            else:
+                                st.success("✅ 모든 값이 정의된 순서에 포함됨")
+                    
+                        # 🆕 실제 비용 계산 기능 추가
+                        st.markdown("---")
+                        st.subheader("💰 " + t['actual_cost'] + " " + ('계산기' if lang == 'ko' else 'Calculator'))
+                    
+                        # 모델별 API 가격 정의 (2024-2025 기준, USD per 1M tokens)
+                        MODEL_PRICING = {
+                            # OpenAI (2025년 11월 기준, per 1M tokens)
+                            'GPT-4o': {'input': 5.00, 'output': 15.00},  # 2025년 업데이트
+                            'GPT-4o-Mini': {'input': 0.150, 'output': 0.600},
+                            'GPT-4-Turbo': {'input': 10.00, 'output': 30.00},
+                            'GPT-3.5-Turbo': {'input': 0.50, 'output': 1.50},
+                            # Anthropic (2025년 11월 기준, per 1M tokens)
+                            'Claude-Opus-4.5': {'input': 5.00, 'output': 25.00},  # 2025년 11월 출시
+                            'Claude-Sonnet-4.5': {'input': 3.00, 'output': 15.00},  # 2025년 10월 출시
+                            'Claude-Sonnet-4': {'input': 3.00, 'output': 15.00},
+                            'Claude-Haiku-4.5': {'input': 1.00, 'output': 5.00},  # 2025년 11월 출시 (업데이트됨!)
+                            'Claude-3.5-Sonnet': {'input': 3.00, 'output': 15.00},
+                            'Claude-3.5-Haiku': {'input': 0.80, 'output': 4.00},
+                            'Claude-3-Opus': {'input': 15.00, 'output': 75.00},
+                            'Claude-3-Sonnet': {'input': 3.00, 'output': 15.00},
+                            'Claude-3-Haiku': {'input': 0.25, 'output': 1.25},
+                            # Google (2025년 기준, per 1M tokens)
+                            'Gemini-1.5-Pro': {'input': 1.25, 'output': 5.00},
+                            'Gemini-1.5-Flash': {'input': 0.075, 'output': 0.30},
+                            # Alibaba (오픈소스)
+                            'Qwen-2.5': {'input': 0.00, 'output': 0.00},  # 오픈소스/로컬
+                            'Qwen2.5': {'input': 0.00, 'output': 0.00},  # 오픈소스/로컬
+                            # LG AI Research
+                            'EXAONE-3.5': {'input': 0.00, 'output': 0.00},  # 로컬/무료
+                            # Meta
+                            'Llama-3.3': {'input': 0.00, 'output': 0.00},  # 오픈소스/로컬
+                            'Llama-3': {'input': 0.00, 'output': 0.00},  # 오픈소스/로컬
+                        }
+                    
+                        # 가격 정보 표시
+                        with st.expander("📋 " + ("모델별 API 가격 정보 (2025년 11월 기준)" if lang == 'ko' else "API Pricing by Model (November 2025)")):
+                            pricing_data = []
+                            for model, prices in MODEL_PRICING.items():
+                                pricing_data.append({
+                                    '모델' if lang == 'ko' else 'Model': model,
+                                    '입력 ($/1M)' if lang == 'ko' else 'Input ($/1M)': f"${prices['input']:.3f}",
+                                    '출력 ($/1M)' if lang == 'ko' else 'Output ($/1M)': f"${prices['output']:.3f}"
+                                })
+                            st.dataframe(pd.DataFrame(pricing_data), width='stretch')
+                            st.caption("💡 " + ("가격은 변동될 수 있습니다. 최신 가격은 각 제공업체 웹사이트를 확인하세요." if lang == 'ko' else "Prices may vary. Check provider websites for latest pricing."))
+                            st.caption("📅 " + ("업데이트: 2025년 11월 (Claude Opus 4.5, Sonnet 4.5, Haiku 4.5 포함)" if lang == 'ko' else "Updated: November 2025 (includes Claude Opus 4.5, Sonnet 4.5, Haiku 4.5)"))
+                    
+                        # 실제 비용 계산
+                        if '총_입력토큰' in model_token_stats.columns and '총_출력토큰' in model_token_stats.columns:
+                            st.markdown("---")
+                        
+                            cost_calculations = []
+                            for _, row in model_token_stats.iterrows():
+                                model = row['모델']
+                                input_tokens = row['총_입력토큰']
+                                output_tokens = row['총_출력토큰']
+                            
+                                # 모델명 매칭 (부분 매칭)
+                                matched_pricing = None
+                                for price_model, pricing in MODEL_PRICING.items():
+                                    if price_model.replace('-', '').replace('.', '').lower() in model.replace('-', '').replace('.', '').lower():
+                                        matched_pricing = pricing
+                                        break
+                            
+                                if matched_pricing:
+                                    # 비용 계산 (USD)
+                                    input_cost = (input_tokens / 1_000_000) * matched_pricing['input']
+                                    output_cost = (output_tokens / 1_000_000) * matched_pricing['output']
+                                    total_cost = input_cost + output_cost
+                                
+                                    # 문제당 비용
+                                    cost_per_problem = total_cost / row['문제수'] if row['문제수'] > 0 else 0
+                                
+                                    # 정답당 비용 (효율성 지표)
+                                    correct_answers = row['문제수'] * row['정확도'] / 100
+                                    cost_per_correct = total_cost / correct_answers if correct_answers > 0 else 0
+                                
+                                    cost_calculations.append({
+                                        '모델' if lang == 'ko' else 'Model': model,
+                                        '총비용 ($)' if lang == 'ko' else 'Total Cost ($)': total_cost,
+                                        '문제당 ($)' if lang == 'ko' else 'Per Problem ($)': cost_per_problem,
+                                        '정답당 ($)' if lang == 'ko' else 'Per Correct ($)': cost_per_correct,
+                                        '정확도 (%)' if lang == 'ko' else 'Accuracy (%)': row['정확도'],
+                                        '입력비용 ($)' if lang == 'ko' else 'Input Cost ($)': input_cost,
+                                        '출력비용 ($)' if lang == 'ko' else 'Output Cost ($)': output_cost
+                                    })
+                        
+                            if cost_calculations:
+                                cost_df = pd.DataFrame(cost_calculations)
+                            
+                                # 비용 효율성으로 정렬 (정답당 비용 기준)
+                                cost_df = cost_df.sort_values('정답당 ($)' if lang == 'ko' else 'Per Correct ($)')
+                            
+                                st.subheader("💵 " + t['actual_cost'] + " " + ('분석' if lang == 'ko' else 'Analysis'))
+                            
+                                # 주요 메트릭
+                                col1, col2, col3, col4 = st.columns(4)
+                            
+                                with col1:
+                                    total_cost_all = cost_df['총비용 ($)' if lang == 'ko' else 'Total Cost ($)'].sum()
+                                    st.metric(
+                                        t['total_estimated_cost'],
+                                        f"${total_cost_all:.4f}"
+                                    )
+                            
+                                with col2:
+                                    avg_cost_per_problem = cost_df['문제당 ($)' if lang == 'ko' else 'Per Problem ($)'].mean()
+                                    st.metric(
+                                        t['cost_per_problem'],
+                                        f"${avg_cost_per_problem:.6f}"
+                                    )
+                            
+                                with col3:
+                                    # 가장 비용 효율적인 모델
+                                    most_efficient = cost_df.iloc[0]
+                                    st.metric(
+                                        '최고 효율' if lang == 'ko' else 'Most Efficient',
+                                        most_efficient['모델' if lang == 'ko' else 'Model'],
+                                        f"${most_efficient['정답당 ($)' if lang == 'ko' else 'Per Correct ($)']:.6f}"
+                                    )
+                            
+                                with col4:
+                                    # 가장 비용 비효율적인 모델
+                                    least_efficient = cost_df.iloc[-1]
+                                    st.metric(
+                                        '최저 효율' if lang == 'ko' else 'Least Efficient',
+                                        least_efficient['모델' if lang == 'ko' else 'Model'],
+                                        f"${least_efficient['정답당 ($)' if lang == 'ko' else 'Per Correct ($)']:.6f}"
+                                    )
+                            
+                                # 상세 테이블
+                                st.markdown("---")
+                                st.dataframe(
+                                    cost_df.style.format({
+                                        '총비용 ($)' if lang == 'ko' else 'Total Cost ($)': '${:.6f}',
+                                        '문제당 ($)' if lang == 'ko' else 'Per Problem ($)': '${:.8f}',
+                                        '정답당 ($)' if lang == 'ko' else 'Per Correct ($)': '${:.8f}',
+                                        '정확도 (%)' if lang == 'ko' else 'Accuracy (%)': '{:.2f}%',
+                                        '입력비용 ($)' if lang == 'ko' else 'Input Cost ($)': '${:.6f}',
+                                        '출력비용 ($)' if lang == 'ko' else 'Output Cost ($)': '${:.6f}'
+                                    }).background_gradient(
+                                        subset=['정답당 ($)' if lang == 'ko' else 'Per Correct ($)'],
+                                        cmap='RdYlGn_r'
+                                    ),
+                                    width='stretch'
+                                )
+                            
+                                st.markdown("---")
+                            
+                                # 비용 시각화
+                                col1, col2 = st.columns(2)
+                            
+                                with col1:
+                                    # 총 비용 비교
+                                    fig = px.bar(
+                                        cost_df,
+                                        x='모델' if lang == 'ko' else 'Model',
+                                        y='총비용 ($)' if lang == 'ko' else 'Total Cost ($)',
+                                        title=t['total_estimated_cost'],
+                                        text='총비용 ($)' if lang == 'ko' else 'Total Cost ($)',
+                                        color='총비용 ($)' if lang == 'ko' else 'Total Cost ($)',
+                                        color_continuous_scale='Reds'
+                                    )
+                                    fig.update_traces(
+                                        texttemplate='$%{text:.6f}',
+                                        textposition='outside',                textfont=dict(size=annotation_size),
+                                        marker_line_color='black',
+                                        marker_line_width=1.5
+                                    )
+                                    fig.update_layout(
+                                        height=400,
+                                        showlegend=False,
+                                        yaxis_title=t['cost'] + ' (USD)',
+                                        xaxis_title=t['model']
+                                    )
+                                    fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                                    st.plotly_chart(fig, use_container_width=True)
+                            
+                                with col2:
+                                    # 정답당 비용 (효율성)
+                                    fig = px.bar(
+                                        cost_df.sort_values('정답당 ($)' if lang == 'ko' else 'Per Correct ($)'),
+                                        x='모델' if lang == 'ko' else 'Model',
+                                        y='정답당 ($)' if lang == 'ko' else 'Per Correct ($)',
+                                        title=t['cost_efficiency'] + ' (' + ('정답당 비용' if lang == 'ko' else 'Cost per Correct') + ')',
+                                        text='정답당 ($)' if lang == 'ko' else 'Per Correct ($)',
+                                        color='정답당 ($)' if lang == 'ko' else 'Per Correct ($)',
+                                        color_continuous_scale='RdYlGn_r'
+                                    )
+                                    fig.update_traces(
+                                        texttemplate='$%{text:.8f}',
+                                        textposition='outside',                textfont=dict(size=annotation_size),
+                                        marker_line_color='black',
+                                        marker_line_width=1.5
+                                    )
+                                    fig.update_layout(
+                                        height=400,
+                                        showlegend=False,
+                                        yaxis_title=t['cost'] + ' (USD)',
+                                        xaxis_title=t['model']
+                                    )
+                                    fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                                    st.plotly_chart(fig, use_container_width=True)
+                            
+                                st.markdown("---")
+                            
+                                # 비용 vs 정확도 산점도
+                                fig = px.scatter(
+                                    cost_df,
+                                    x='총비용 ($)' if lang == 'ko' else 'Total Cost ($)',
+                                    y='정확도 (%)' if lang == 'ko' else 'Accuracy (%)',
+                                    text='모델' if lang == 'ko' else 'Model',
+                                    title=t['cost'] + ' vs ' + t['accuracy'],
+                                    color='정확도 (%)' if lang == 'ko' else 'Accuracy (%)',
+                                    color_continuous_scale='RdYlGn',
+                                    size='문제당 ($)' if lang == 'ko' else 'Per Problem ($)'
+                                )
+                                fig.update_traces(
+                                    textposition='top center',
+                                    marker=dict(
+                                        line=dict(width=2, color='black'),
+                                        opacity=0.7
+                                    )
+                                )
+                                fig.update_layout(
+                                    height=500,
+                                    yaxis=dict(range=[0, 100])
+                                )
+                                st.plotly_chart(fig, use_container_width=True)
+                            
+                                # 인사이트
+                                st.success(f"""
+                                💡 **{t['cost_efficiency']} {'인사이트' if lang == 'ko' else 'Insights'}**:
+                                - **{'최고 효율' if lang == 'ko' else 'Most Efficient'}**: {most_efficient['모델' if lang == 'ko' else 'Model']} (${most_efficient['정답당 ($)' if lang == 'ko' else 'Per Correct ($)']:.8f} / {'정답' if lang == 'ko' else 'correct'})
+                                - **{'최저 효율' if lang == 'ko' else 'Least Efficient'}**: {least_efficient['모델' if lang == 'ko' else 'Model']} (${least_efficient['정답당 ($)' if lang == 'ko' else 'Per Correct ($)']:.8f} / {'정답' if lang == 'ko' else 'correct'})
+                                - **{'효율 차이' if lang == 'ko' else 'Efficiency Gap'}**: {(least_efficient['정답당 ($)' if lang == 'ko' else 'Per Correct ($)'] / most_efficient['정답당 ($)' if lang == 'ko' else 'Per Correct ($)']):.1f}x
+                                """)
+                            else:
+                                st.info("💡 " + ("현재 데이터의 모델들에 대한 가격 정보가 없습니다. 모델명을 확인하거나 가격 정보를 추가하세요." if lang == 'ko' else "No pricing information available for current models. Please check model names or add pricing info."))
+                    
+                        st.markdown("---")
+                    
+                        col1, col2 = st.columns(2)
+                    
+                        with col1:
+                            # 비용 수준별 모델 분포
+                            cost_dist = token_df.groupby('비용수준_정규화')['모델'].nunique().reset_index()
+                            cost_dist.columns = ['비용수준', '모델수']
+                        
+                            # cost_order에 있는 값만 필터링
+                            cost_dist = cost_dist[cost_dist['비용수준'].isin(cost_order)]
+                        
+                            # 문자열로 명시적 변환
+                            cost_dist['비용수준'] = cost_dist['비용수준'].astype(str)
+                        
+                            fig = px.pie(
+                                cost_dist,
+                                values='모델수',
+                                names='비용수준',
+                                title=t['cost_level'] + ' ' + ('분포' if lang == 'ko' else 'Distribution'),
+                                hole=0.3
+                            )
+                            fig.update_traces(
+                                textposition='inside',
+                                textinfo='percent+label',                textfont=dict(size=annotation_size),
+                                marker=dict(line=dict(color='black', width=2))
                             )
                             fig.update_layout(height=400)
+<<<<<<< HEAD
                             st.plotly_chart(fig, width='stretch')
                 
                 st.markdown("---")
@@ -5456,220 +7155,47 @@ def main():
                 # 4. 비용 분석 (비용 수준 데이터가 있는 경우)
                 if 'cost' in available_cols:
                     st.subheader("💵 " + t['cost_analysis'])
+=======
+                            st.plotly_chart(fig, use_container_width=True)
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                     
-                    cost_col = available_cols['cost']
-                    
-                    # 🔍 디버깅 정보 (펼치기/접기)
-                    with st.expander("🔍 " + ("비용 데이터 확인" if lang == 'ko' else "Check Cost Data")):
-                        st.write("**" + ("원본 비용 수준 값" if lang == 'ko' else "Original Cost Level Values") + ":**")
-                        original_values = filtered_df[cost_col].unique().tolist()
-                        st.write(f"고유 값: {original_values}")
-                        st.write(f"개수: {len(original_values)}")
-                    
-                    # 비용 수준을 정규화 및 순서 정의
-                    def normalize_cost_level(level):
-                        if pd.isna(level):
-                            return 'unknown'
-                        level_str = str(level).lower().strip()
-                        # 무료/로컬 모델
-                        if level_str in ['무료', 'free', 'f', '0', 'local', 'localhost', '로컬']:
-                            return t['free']
-                        # 매우 낮음
-                        elif level_str in ['매우낮음', 'very low', 'very_low', 'vl', 'verylow']:
-                            return t['very_low']
-                        # 낮음
-                        elif level_str in ['낮음', 'low', 'l']:
-                            return t['low']
-                        # 중간
-                        elif level_str in ['중간', 'medium', 'mid', 'm']:
-                            return t['medium_cost']
-                        # 높음
-                        elif level_str in ['높음', 'high', 'h']:
-                            return t['high']
-                        return level
-                    
-                    # 비용 순서 정의 (무료 → 매우낮음 → 낮음 → 중간 → 높음)
-                    cost_order = [t['free'], t['very_low'], t['low'], t['medium_cost'], t['high']]
-                    
-                    token_df['비용수준_정규화'] = token_df[cost_col].apply(normalize_cost_level)
-                    model_token_stats['비용수준_정규화'] = model_token_stats['비용수준'].apply(normalize_cost_level) if '비용수준' in model_token_stats.columns else t['medium_cost']
-                    
-                    # 🔍 정규화 후 값 확인
-                    with st.expander("🔍 " + ("정규화 후 비용 수준 값" if lang == 'ko' else "Normalized Cost Level Values")):
-                        normalized_values = token_df['비용수준_정규화'].unique().tolist()
-                        st.write(f"**정규화된 고유 값**: {normalized_values}")
-                        st.write(f"**정의된 순서 (cost_order)**: {cost_order}")
+                        with col2:
+                            # 비용 수준별 평균 정확도
+                            cost_acc = token_df.groupby('비용수준_정규화')['정답여부'].mean().reset_index()
+                            cost_acc.columns = ['비용수준', '정확도']
+                            cost_acc['정확도'] = cost_acc['정확도'] * 100
                         
-                        # 순서에 없는 값 확인
-                        unexpected = [v for v in normalized_values if v not in cost_order]
-                        if unexpected:
-                            st.warning(f"⚠️ 정의된 순서에 없는 값: {unexpected}")
-                        else:
-                            st.success("✅ 모든 값이 정의된 순서에 포함됨")
-                    
-                    # 🆕 실제 비용 계산 기능 추가
-                    st.markdown("---")
-                    st.subheader("💰 " + t['actual_cost'] + " " + ('계산기' if lang == 'ko' else 'Calculator'))
-                    
-                    # 모델별 API 가격 정의 (2024-2025 기준, USD per 1M tokens)
-                    MODEL_PRICING = {
-                        # OpenAI (2025년 11월 기준, per 1M tokens)
-                        'GPT-4o': {'input': 5.00, 'output': 15.00},  # 2025년 업데이트
-                        'GPT-4o-Mini': {'input': 0.150, 'output': 0.600},
-                        'GPT-4-Turbo': {'input': 10.00, 'output': 30.00},
-                        'GPT-3.5-Turbo': {'input': 0.50, 'output': 1.50},
-                        # Anthropic (2025년 11월 기준, per 1M tokens)
-                        'Claude-Opus-4.5': {'input': 5.00, 'output': 25.00},  # 2025년 11월 출시
-                        'Claude-Sonnet-4.5': {'input': 3.00, 'output': 15.00},  # 2025년 10월 출시
-                        'Claude-Sonnet-4': {'input': 3.00, 'output': 15.00},
-                        'Claude-Haiku-4.5': {'input': 1.00, 'output': 5.00},  # 2025년 11월 출시 (업데이트됨!)
-                        'Claude-3.5-Sonnet': {'input': 3.00, 'output': 15.00},
-                        'Claude-3.5-Haiku': {'input': 0.80, 'output': 4.00},
-                        'Claude-3-Opus': {'input': 15.00, 'output': 75.00},
-                        'Claude-3-Sonnet': {'input': 3.00, 'output': 15.00},
-                        'Claude-3-Haiku': {'input': 0.25, 'output': 1.25},
-                        # Google (2025년 기준, per 1M tokens)
-                        'Gemini-1.5-Pro': {'input': 1.25, 'output': 5.00},
-                        'Gemini-1.5-Flash': {'input': 0.075, 'output': 0.30},
-                        # Alibaba (오픈소스)
-                        'Qwen-2.5': {'input': 0.00, 'output': 0.00},  # 오픈소스/로컬
-                        'Qwen2.5': {'input': 0.00, 'output': 0.00},  # 오픈소스/로컬
-                        # LG AI Research
-                        'EXAONE-3.5': {'input': 0.00, 'output': 0.00},  # 로컬/무료
-                        # Meta
-                        'Llama-3.3': {'input': 0.00, 'output': 0.00},  # 오픈소스/로컬
-                        'Llama-3': {'input': 0.00, 'output': 0.00},  # 오픈소스/로컬
-                    }
-                    
-                    # 가격 정보 표시
-                    with st.expander("📋 " + ("모델별 API 가격 정보 (2025년 11월 기준)" if lang == 'ko' else "API Pricing by Model (November 2025)")):
-                        pricing_data = []
-                        for model, prices in MODEL_PRICING.items():
-                            pricing_data.append({
-                                '모델' if lang == 'ko' else 'Model': model,
-                                '입력 ($/1M)' if lang == 'ko' else 'Input ($/1M)': f"${prices['input']:.3f}",
-                                '출력 ($/1M)' if lang == 'ko' else 'Output ($/1M)': f"${prices['output']:.3f}"
-                            })
-                        st.dataframe(pd.DataFrame(pricing_data), width='stretch')
-                        st.caption("💡 " + ("가격은 변동될 수 있습니다. 최신 가격은 각 제공업체 웹사이트를 확인하세요." if lang == 'ko' else "Prices may vary. Check provider websites for latest pricing."))
-                        st.caption("📅 " + ("업데이트: 2025년 11월 (Claude Opus 4.5, Sonnet 4.5, Haiku 4.5 포함)" if lang == 'ko' else "Updated: November 2025 (includes Claude Opus 4.5, Sonnet 4.5, Haiku 4.5)"))
-                    
-                    # 실제 비용 계산
-                    if '총_입력토큰' in model_token_stats.columns and '총_출력토큰' in model_token_stats.columns:
-                        st.markdown("---")
+                            # cost_order에 있는 값만 필터링
+                            cost_acc = cost_acc[cost_acc['비용수준'].isin(cost_order)]
                         
-                        cost_calculations = []
-                        for _, row in model_token_stats.iterrows():
-                            model = row['모델']
-                            input_tokens = row['총_입력토큰']
-                            output_tokens = row['총_출력토큰']
-                            
-                            # 모델명 매칭 (부분 매칭)
-                            matched_pricing = None
-                            for price_model, pricing in MODEL_PRICING.items():
-                                if price_model.replace('-', '').replace('.', '').lower() in model.replace('-', '').replace('.', '').lower():
-                                    matched_pricing = pricing
-                                    break
-                            
-                            if matched_pricing:
-                                # 비용 계산 (USD)
-                                input_cost = (input_tokens / 1_000_000) * matched_pricing['input']
-                                output_cost = (output_tokens / 1_000_000) * matched_pricing['output']
-                                total_cost = input_cost + output_cost
-                                
-                                # 문제당 비용
-                                cost_per_problem = total_cost / row['문제수'] if row['문제수'] > 0 else 0
-                                
-                                # 정답당 비용 (효율성 지표)
-                                correct_answers = row['문제수'] * row['정확도'] / 100
-                                cost_per_correct = total_cost / correct_answers if correct_answers > 0 else 0
-                                
-                                cost_calculations.append({
-                                    '모델' if lang == 'ko' else 'Model': model,
-                                    '총비용 ($)' if lang == 'ko' else 'Total Cost ($)': total_cost,
-                                    '문제당 ($)' if lang == 'ko' else 'Per Problem ($)': cost_per_problem,
-                                    '정답당 ($)' if lang == 'ko' else 'Per Correct ($)': cost_per_correct,
-                                    '정확도 (%)' if lang == 'ko' else 'Accuracy (%)': row['정확도'],
-                                    '입력비용 ($)' if lang == 'ko' else 'Input Cost ($)': input_cost,
-                                    '출력비용 ($)' if lang == 'ko' else 'Output Cost ($)': output_cost
-                                })
+                            # 문자열로 명시적 변환
+                            cost_acc['비용수준'] = cost_acc['비용수준'].astype(str)
                         
-                        if cost_calculations:
-                            cost_df = pd.DataFrame(cost_calculations)
-                            
-                            # 비용 효율성으로 정렬 (정답당 비용 기준)
-                            cost_df = cost_df.sort_values('정답당 ($)' if lang == 'ko' else 'Per Correct ($)')
-                            
-                            st.subheader("💵 " + t['actual_cost'] + " " + ('분석' if lang == 'ko' else 'Analysis'))
-                            
-                            # 주요 메트릭
-                            col1, col2, col3, col4 = st.columns(4)
-                            
-                            with col1:
-                                total_cost_all = cost_df['총비용 ($)' if lang == 'ko' else 'Total Cost ($)'].sum()
-                                st.metric(
-                                    t['total_estimated_cost'],
-                                    f"${total_cost_all:.4f}"
-                                )
-                            
-                            with col2:
-                                avg_cost_per_problem = cost_df['문제당 ($)' if lang == 'ko' else 'Per Problem ($)'].mean()
-                                st.metric(
-                                    t['cost_per_problem'],
-                                    f"${avg_cost_per_problem:.6f}"
-                                )
-                            
-                            with col3:
-                                # 가장 비용 효율적인 모델
-                                most_efficient = cost_df.iloc[0]
-                                st.metric(
-                                    '최고 효율' if lang == 'ko' else 'Most Efficient',
-                                    most_efficient['모델' if lang == 'ko' else 'Model'],
-                                    f"${most_efficient['정답당 ($)' if lang == 'ko' else 'Per Correct ($)']:.6f}"
-                                )
-                            
-                            with col4:
-                                # 가장 비용 비효율적인 모델
-                                least_efficient = cost_df.iloc[-1]
-                                st.metric(
-                                    '최저 효율' if lang == 'ko' else 'Least Efficient',
-                                    least_efficient['모델' if lang == 'ko' else 'Model'],
-                                    f"${least_efficient['정답당 ($)' if lang == 'ko' else 'Per Correct ($)']:.6f}"
-                                )
-                            
-                            # 상세 테이블
-                            st.markdown("---")
-                            st.dataframe(
-                                cost_df.style.format({
-                                    '총비용 ($)' if lang == 'ko' else 'Total Cost ($)': '${:.6f}',
-                                    '문제당 ($)' if lang == 'ko' else 'Per Problem ($)': '${:.8f}',
-                                    '정답당 ($)' if lang == 'ko' else 'Per Correct ($)': '${:.8f}',
-                                    '정확도 (%)' if lang == 'ko' else 'Accuracy (%)': '{:.2f}%',
-                                    '입력비용 ($)' if lang == 'ko' else 'Input Cost ($)': '${:.6f}',
-                                    '출력비용 ($)' if lang == 'ko' else 'Output Cost ($)': '${:.6f}'
-                                }).background_gradient(
-                                    subset=['정답당 ($)' if lang == 'ko' else 'Per Correct ($)'],
-                                    cmap='RdYlGn_r'
-                                ),
-                                width='stretch'
+                            fig = px.bar(
+                                cost_acc,
+                                x='비용수준',
+                                y='정확도',
+                                title=t['cost_level'] + ' vs ' + t['accuracy'],
+                                text='정확도',
+                                color='정확도',
+                                color_continuous_scale='RdYlGn'
                             )
-                            
-                            st.markdown("---")
-                            
-                            # 비용 시각화
-                            col1, col2 = st.columns(2)
-                            
-                            with col1:
-                                # 총 비용 비교
-                                fig = px.bar(
-                                    cost_df,
-                                    x='모델' if lang == 'ko' else 'Model',
-                                    y='총비용 ($)' if lang == 'ko' else 'Total Cost ($)',
-                                    title=t['total_estimated_cost'],
-                                    text='총비용 ($)' if lang == 'ko' else 'Total Cost ($)',
-                                    color='총비용 ($)' if lang == 'ko' else 'Total Cost ($)',
-                                    color_continuous_scale='Reds'
+                            fig.update_traces(
+                                texttemplate='%{text:.1f}%',
+                                textposition='outside',                textfont=dict(size=annotation_size),
+                                marker_line_color='black',
+                                marker_line_width=1.5
+                            )
+                            fig.update_layout(
+                                height=400,
+                                showlegend=False,
+                                yaxis_title=t['accuracy'] + ' (%)',
+                                yaxis=dict(range=[0, 100]),
+                                xaxis=dict(
+                                    categoryorder='array',
+                                    categoryarray=cost_order
                                 )
+<<<<<<< HEAD
                                 fig.update_traces(
                                     texttemplate='$%{text:.6f}',
                                     textposition='outside',                textfont=dict(size=annotation_size),
@@ -5714,15 +7240,36 @@ def main():
                             st.markdown("---")
                             
                             # 비용 vs 정확도 산점도
+=======
+                            )
+                            st.plotly_chart(fig, use_container_width=True)
+                    
+                        st.markdown("---")
+                    
+                        # 비용 효율성 매트릭스
+                        st.subheader("📊 " + t['cost_efficiency'] + (' 매트릭스' if lang == 'ko' else ' Matrix'))
+                    
+                        # 비용 수준과 정확도로 모델 분류
+                        if '비용수준_정규화' in model_token_stats.columns:
+                            # 데이터 준비 및 필터링
+                            plot_data = model_token_stats.copy()
+                        
+                            # cost_order에 있는 값만 필터링
+                            plot_data = plot_data[plot_data['비용수준_정규화'].isin(cost_order)]
+                        
+                            # 비용수준을 문자열로 명시적 변환
+                            plot_data['비용수준_정규화'] = plot_data['비용수준_정규화'].astype(str)
+                        
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                             fig = px.scatter(
-                                cost_df,
-                                x='총비용 ($)' if lang == 'ko' else 'Total Cost ($)',
-                                y='정확도 (%)' if lang == 'ko' else 'Accuracy (%)',
-                                text='모델' if lang == 'ko' else 'Model',
-                                title=t['cost'] + ' vs ' + t['accuracy'],
-                                color='정확도 (%)' if lang == 'ko' else 'Accuracy (%)',
-                                color_continuous_scale='RdYlGn',
-                                size='문제당 ($)' if lang == 'ko' else 'Per Problem ($)'
+                                plot_data,
+                                x='비용수준_정규화',
+                                y='정확도',
+                                size='총_토큰' if '총_토큰' in plot_data.columns else '문제수',
+                                text='모델',
+                                title=t['cost_level'] + ' vs ' + t['accuracy'],
+                                color='정확도',
+                                color_continuous_scale='RdYlGn'
                             )
                             fig.update_traces(
                                 textposition='top center',
@@ -5733,24 +7280,40 @@ def main():
                             )
                             fig.update_layout(
                                 height=500,
-                                yaxis=dict(range=[0, 100])
+                                yaxis=dict(range=[0, 100]),
+                                xaxis=dict(
+                                    title=t['cost_level'],
+                                    categoryorder='array',
+                                    categoryarray=cost_order
+                                ),
+                                yaxis_title=t['accuracy'] + ' (%)'
                             )
+<<<<<<< HEAD
                             st.plotly_chart(fig, width='stretch')
                             
+=======
+                            st.plotly_chart(fig, use_container_width=True)
+                        
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                             # 인사이트
-                            st.success(f"""
+                            st.info(f"""
                             💡 **{t['cost_efficiency']} {'인사이트' if lang == 'ko' else 'Insights'}**:
-                            - **{'최고 효율' if lang == 'ko' else 'Most Efficient'}**: {most_efficient['모델' if lang == 'ko' else 'Model']} (${most_efficient['정답당 ($)' if lang == 'ko' else 'Per Correct ($)']:.8f} / {'정답' if lang == 'ko' else 'correct'})
-                            - **{'최저 효율' if lang == 'ko' else 'Least Efficient'}**: {least_efficient['모델' if lang == 'ko' else 'Model']} (${least_efficient['정답당 ($)' if lang == 'ko' else 'Per Correct ($)']:.8f} / {'정답' if lang == 'ko' else 'correct'})
-                            - **{'효율 차이' if lang == 'ko' else 'Efficiency Gap'}**: {(least_efficient['정답당 ($)' if lang == 'ko' else 'Per Correct ($)'] / most_efficient['정답당 ($)' if lang == 'ko' else 'Per Correct ($)']):.1f}x
+                            - **{'고효율 영역' if lang == 'ko' else 'High Efficiency Zone'}** ({'낮은 비용 + 높은 정확도' if lang == 'ko' else 'Low cost + High accuracy'}): {'좌측 상단' if lang == 'ko' else 'Top left'}
+                            - **{'고비용 영역' if lang == 'ko' else 'High Cost Zone'}** ({'높은 비용' if lang == 'ko' else 'High cost'}): {'우측' if lang == 'ko' else 'Right side'}
+                            - {'모델 선택 시 비용 대비 성능을 고려하세요' if lang == 'ko' else 'Consider cost-performance ratio when selecting models'}
                             """)
-                        else:
-                            st.info("💡 " + ("현재 데이터의 모델들에 대한 가격 정보가 없습니다. 모델명을 확인하거나 가격 정보를 추가하세요." if lang == 'ko' else "No pricing information available for current models. Please check model names or add pricing info."))
-                    
+                
                     st.markdown("---")
+                
+                    # 5. 테스트별 토큰 분석 (테스트가 여러 개인 경우)
+                    if '테스트명' in token_df.columns and token_df['테스트명'].nunique() > 1:
+                        st.subheader("📚 " + ("테스트별 토큰 사용량" if lang == 'ko' else "Token Usage by Test"))
                     
-                    col1, col2 = st.columns(2)
+                        token_col = available_cols.get('total', available_cols.get('input', list(available_cols.values())[0]))
+                        test_token = token_df.groupby(['모델', '테스트명'])[token_col].sum().reset_index()
+                        test_token.columns = ['모델', '테스트명', '총토큰']
                     
+<<<<<<< HEAD
                     with col1:
                         # 비용 수준별 모델 분포
                         cost_dist = token_df.groupby('비용수준_정규화')['모델'].nunique().reset_index()
@@ -5924,28 +7487,40 @@ def main():
                             x='모델',
                             y='평균토큰',
                             color='문제유형',
+=======
+                        fig = px.bar(
+                            test_token,
+                            x='테스트명',
+                            y='총토큰',
+                            color='모델',
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                             barmode='group',
-                            title=t['avg_tokens_per_problem'] + ' (' + t['problem_type'] + '별)',
-                            labels={'평균토큰': t['avg_tokens_per_problem']}
+                            title='테스트별 모델 토큰 사용량' if lang == 'ko' else 'Token Usage by Test and Model',
+                            labels={'총토큰': t['total_tokens']}
                         )
                         fig.update_layout(
                             height=400,
-                            xaxis_title=t['model']
+                            xaxis_title=t['testname'],
+                            yaxis_title=t['total_tokens']
                         )
                         fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+<<<<<<< HEAD
                         st.plotly_chart(fig, width='stretch')
+=======
+                        st.plotly_chart(fig, use_container_width=True)
+                
+                    st.markdown("---")
+                
+                    # 6. 문제 유형별 토큰 분석 (이미지 문제가 있는 경우)
+                    if 'image' in token_df.columns:
+                        st.subheader("🖼️ " + ("문제 유형별 토큰 사용량" if lang == 'ko' else "Token Usage by Problem Type"))
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                     
-                    with col2:
-                        # 문제 유형별 정확도 비교
-                        fig = px.bar(
-                            problem_type_token,
-                            x='모델',
-                            y='정확도',
-                            color='문제유형',
-                            barmode='group',
-                            title=t['accuracy'] + ' (' + t['problem_type'] + '별)',
-                            labels={'정확도': t['accuracy'] + ' (%)'}
+                        # 이미지 문제 여부 구분
+                        token_df['문제유형'] = token_df['image'].apply(
+                            lambda x: t['text_only'] if str(x).lower() == 'text_only' or str(x) == 'X' else t['image_problem']
                         )
+<<<<<<< HEAD
                         fig.update_layout(
                             height=400,
                             xaxis_title=t['model'],
@@ -6011,25 +7586,21 @@ def main():
                 stats = get_testset_statistics(testsets, test_name, lang)
                 if stats:
                     st.subheader(f"📖 {test_name}")
+=======
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                     
-                    col1, col2, col3 = st.columns(3)
+                        token_col = available_cols.get('total', available_cols.get('input', list(available_cols.values())[0]))
+                        problem_type_token = token_df.groupby(['모델', '문제유형']).agg({
+                            token_col: 'mean',
+                            '정답여부': 'mean'
+                        }).reset_index()
+                        problem_type_token.columns = ['모델', '문제유형', '평균토큰', '정확도']
+                        problem_type_token['정확도'] = problem_type_token['정확도'] * 100
                     
-                    with col1:
-                        st.metric(t['total_problems'], stats['total_problems'])
+                        col1, col2 = st.columns(2)
                     
-                    with col2:
-                        if 'law_problems' in stats:
-                            st.metric(t['law_problems'], stats['law_problems'])
-                    
-                    with col3:
-                        if 'non_law_problems' in stats:
-                            st.metric(t['non_law_problems'], stats['non_law_problems'])
-                    
-                    # 과목별, 연도별, 세션별 통계
-                    if 'by_subject' in stats or 'by_year' in stats or 'by_session' in stats:
-                        col1, col2, col3 = st.columns(3)
-                        
                         with col1:
+<<<<<<< HEAD
                             if 'by_subject' in stats:
                                 st.markdown(f"**{t['by_subject']}**")
                                 subject_df = pd.DataFrame(list(stats['by_subject'].items()), 
@@ -6056,12 +7627,163 @@ def main():
                                 fig = px.bar(session_df, x='Session', y='Count', 
                                            title=t['session_distribution'])
                                 st.plotly_chart(fig, width='stretch')
+=======
+                            # 문제 유형별 평균 토큰
+                            fig = px.bar(
+                                problem_type_token,
+                                x='모델',
+                                y='평균토큰',
+                                color='문제유형',
+                                barmode='group',
+                                title=t['avg_tokens_per_problem'] + ' (' + t['problem_type'] + '별)',
+                                labels={'평균토큰': t['avg_tokens_per_problem']}
+                            )
+                            fig.update_layout(
+                                height=400,
+                                xaxis_title=t['model']
+                            )
+                            fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                            st.plotly_chart(fig, use_container_width=True)
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                     
-                    st.markdown("---")
-        else:
-            st.info("테스트를 선택해주세요.")
+                        with col2:
+                            # 문제 유형별 정확도 비교
+                            fig = px.bar(
+                                problem_type_token,
+                                x='모델',
+                                y='정확도',
+                                color='문제유형',
+                                barmode='group',
+                                title=t['accuracy'] + ' (' + t['problem_type'] + '별)',
+                                labels={'정확도': t['accuracy'] + ' (%)'}
+                            )
+                            fig.update_layout(
+                                height=400,
+                                xaxis_title=t['model'],
+                                yaxis=dict(range=[0, 100])
+                            )
+                            fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                            st.plotly_chart(fig, use_container_width=True)
     
-    # 사이드바 하단 정보
+        # 탭 10: 테스트셋 통계
+        except Exception as e:
+            st.error(f'⚠️ 이 탭에서 오류가 발생했습니다: {type(e).__name__}: {e}')
+            import traceback
+            with st.expander('오류 상세 정보'):
+                st.code(traceback.format_exc())
+    with tabs[9]:
+        try:
+            st.header(f"📋 {t['testset_stats']}")
+        
+            # 상단에 전체 통계 요약 추가
+            st.subheader("📊 " + ("전체 테스트셋 통계" if lang == 'ko' else "Overall Test Set Statistics"))
+        
+            # 선택된 테스트들의 전체 통계
+            total_all_problems = 0
+            total_law_problems = 0
+            total_non_law_problems = 0
+        
+            if selected_tests:
+                for test_name in selected_tests:
+                    if test_name in testsets:
+                        test_df = testsets[test_name]
+                        total_all_problems += len(test_df)
+                        if 'law' in test_df.columns:
+                            total_law_problems += len(test_df[test_df['law'] == 'O'])
+                            total_non_law_problems += len(test_df[test_df['law'] != 'O'])
+                        else:
+                            total_non_law_problems += len(test_df)
+        
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric(
+                    "총 문제 수" if lang == 'ko' else "Total Problems",
+                    f"{total_all_problems:,}",
+                    help="선택된 모든 테스트의 전체 문제 수 (테스트셋 기준)"
+                )
+            with col2:
+                st.metric(
+                    "법령 문제" if lang == 'ko' else "Law Problems",
+                    f"{total_law_problems:,}",
+                    help="법령 문제 수 (테스트셋 기준)"
+                )
+            with col3:
+                st.metric(
+                    "비법령 문제" if lang == 'ko' else "Non-Law Problems",
+                    f"{total_non_law_problems:,}",
+                    help="비법령 문제 수 (테스트셋 기준)"
+                )
+        
+            st.info("💡 " + (
+                "이 통계는 테스트셋 파일 기준입니다. 전체 요약 탭의 수치와 동일합니다." 
+                if lang == 'ko' 
+                else "These statistics are based on test set files. They match the Overview tab."
+            ))
+        
+            st.markdown("---")
+        
+            if selected_tests:
+                # 선택된 테스트들의 개별 통계 표시
+                for test_name in selected_tests:
+                    stats = get_testset_statistics(testsets, test_name, lang)
+                    if stats:
+                        st.subheader(f"📖 {test_name}")
+                    
+                        col1, col2, col3 = st.columns(3)
+                    
+                        with col1:
+                            st.metric(t['total_problems'], stats['total_problems'])
+                    
+                        with col2:
+                            if 'law_problems' in stats:
+                                st.metric(t['law_problems'], stats['law_problems'])
+                    
+                        with col3:
+                            if 'non_law_problems' in stats:
+                                st.metric(t['non_law_problems'], stats['non_law_problems'])
+                    
+                        # 과목별, 연도별, 세션별 통계
+                        if 'by_subject' in stats or 'by_year' in stats or 'by_session' in stats:
+                            col1, col2, col3 = st.columns(3)
+                        
+                            with col1:
+                                if 'by_subject' in stats:
+                                    st.markdown(f"**{t['by_subject']}**")
+                                    subject_df = pd.DataFrame(list(stats['by_subject'].items()), 
+                                                             columns=['Subject', 'Count'])
+                                    fig = px.bar(subject_df, x='Subject', y='Count', 
+                                               title=t['subject_distribution'])
+                                    fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                                    st.plotly_chart(fig, use_container_width=True)
+                        
+                            with col2:
+                                if 'by_year' in stats:
+                                    st.markdown(f"**{t['by_year']}**")
+                                    year_df = pd.DataFrame(list(stats['by_year'].items()), 
+                                                          columns=['Year', 'Count'])
+                                    fig = px.bar(year_df, x='Year', y='Count', 
+                                               title=t['year_distribution'])
+                                    st.plotly_chart(fig, use_container_width=True)
+                        
+                            with col3:
+                                if 'by_session' in stats:
+                                    st.markdown(f"**{t['by_session']}**")
+                                    session_df = pd.DataFrame(list(stats['by_session'].items()), 
+                                                             columns=['Session', 'Count'])
+                                    fig = px.bar(session_df, x='Session', y='Count', 
+                                               title=t['session_distribution'])
+                                    st.plotly_chart(fig, use_container_width=True)
+                    
+                        st.markdown("---")
+            else:
+                st.info("테스트를 선택해주세요.")
+    
+        # 사이드바 하단 정보
+        except Exception as e:
+            st.error(f'⚠️ 이 탭에서 오류가 발생했습니다: {type(e).__name__}: {e}')
+            import traceback
+            with st.expander('오류 상세 정보'):
+                st.code(traceback.format_exc())
     st.sidebar.markdown("---")
     st.sidebar.markdown(f"### 📌 {t['help']}")
     st.sidebar.markdown(f"""
@@ -6081,29 +7803,279 @@ def main():
     # 탭 11: 추가 분석
     with tabs[10]:
         st.header("📑 " + ("추가 분석 표 및 시각화" if lang == 'ko' else "Additional Analysis Tables and Visualizations"))
+        try:
         
-        # ========== 추가 분석 표 섹션 ==========
+            # ========== 추가 분석 표 섹션 ==========
         
-        st.markdown("### 📊 " + ("추가 분석 표" if lang == 'ko' else "Additional Analysis Tables"))
-        st.markdown("---")
+            st.markdown("### 📊 " + ("추가 분석 표" if lang == 'ko' else "Additional Analysis Tables"))
+            st.markdown("---")
         
-        # 표 1: 테스트셋별 평균 정답률 (NEW!)
-        st.subheader("📋 " + ("표 1: 테스트셋별 평균 정답률 및 통계" if lang == 'ko' else "Table 1: Average Accuracy and Statistics by Test Set"))
-        table1 = create_testset_accuracy_table(filtered_df, testsets, lang)
-        if table1 is not None and len(table1) > 0:
-            display_table_with_download(table1, "", "table1_testset_accuracy.xlsx", lang)
+            # 표 1: 테스트셋별 평균 정답률 (NEW!)
+            st.subheader("📋 " + ("표 1: 테스트셋별 평균 정답률 및 통계" if lang == 'ko' else "Table 1: Average Accuracy and Statistics by Test Set"))
+            table1 = create_testset_accuracy_table(filtered_df, testsets, lang)
+            if table1 is not None and len(table1) > 0:
+                display_table_with_download(table1, "", "table1_testset_accuracy.xlsx", lang)
             
-            # 간단한 시각화 추가
-            st.markdown("#### " + ("테스트셋별 정확도 비교" if lang == 'ko' else "Accuracy Comparison by Test Set"))
+                # 간단한 시각화 추가
+                st.markdown("#### " + ("테스트셋별 정확도 비교" if lang == 'ko' else "Accuracy Comparison by Test Set"))
+                fig = px.bar(
+                    table1,
+                    x='테스트명' if lang == 'ko' else 'Test Name',
+                    y='평균 정답률 (%)' if lang == 'ko' else 'Avg Accuracy (%)',
+                    text='평균 정답률 (%)' if lang == 'ko' else 'Avg Accuracy (%)',
+                    color='평균 정답률 (%)' if lang == 'ko' else 'Avg Accuracy (%)',
+                    color_continuous_scale='RdYlGn',
+                    title='테스트셋별 평균 정답률' if lang == 'ko' else 'Average Accuracy by Test Set'
+                )
+                fig.update_traces(
+                    texttemplate='%{text:.1f}%',
+                    textposition='outside',
+                    textfont=dict(size=annotation_size),
+                    marker_line_color='black',
+                    marker_line_width=1.5
+                )
+                fig.update_layout(
+                    height=400,
+                    showlegend=False,
+                    yaxis_title='평균 정답률 (%)' if lang == 'ko' else 'Avg Accuracy (%)',
+                    xaxis_title='테스트명' if lang == 'ko' else 'Test Name',
+                    yaxis=dict(range=[0, 100])
+                )
+                fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                fig.update_yaxes(tickfont=dict(size=annotation_size))
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("테스트셋 데이터가 없습니다." if lang == 'ko' else "No test set data available.")
+        
+            st.markdown("---")
+        
+            # 표 2: 법령/비법령 정답률 비교 (NEW!)
+            st.subheader("⚖️ " + ("표 2: 테스트셋별 법령/비법령 정답률 비교" if lang == 'ko' else "Table 2: Law vs Non-Law Accuracy Comparison by Test Set"))
+            table2 = create_law_nonlaw_comparison_table(filtered_df, testsets, lang)
+            if table2 is not None and len(table2) > 0:
+                display_table_with_download(table2, "", "table2_law_nonlaw_comparison.xlsx", lang)
+            
+                # 간단한 시각화 추가 - 법령 vs 비법령 정답률
+                st.markdown("#### " + ("법령 vs 비법령 정답률 비교" if lang == 'ko' else "Law vs Non-Law Accuracy Comparison"))
+            
+                # 데이터 준비
+                chart_data = []
+                for _, row in table2.iterrows():
+                    test_name = row['테스트명' if lang == 'ko' else 'Test Name']
+                    chart_data.append({
+                        '테스트명' if lang == 'ko' else 'Test Name': test_name,
+                        '구분' if lang == 'ko' else 'Type': '법령' if lang == 'ko' else 'Law',
+                        '정답률 (%)' if lang == 'ko' else 'Accuracy (%)': row['법령 정답률 (%)' if lang == 'ko' else 'Law Accuracy (%)']
+                    })
+                    chart_data.append({
+                        '테스트명' if lang == 'ko' else 'Test Name': test_name,
+                        '구분' if lang == 'ko' else 'Type': '비법령' if lang == 'ko' else 'Non-Law',
+                        '정답률 (%)' if lang == 'ko' else 'Accuracy (%)': row['비법령 정답률 (%)' if lang == 'ko' else 'Non-Law Accuracy (%)']
+                    })
+            
+                chart_df = pd.DataFrame(chart_data)
+            
+                fig = px.bar(
+                    chart_df,
+                    x='테스트명' if lang == 'ko' else 'Test Name',
+                    y='정답률 (%)' if lang == 'ko' else 'Accuracy (%)',
+                    color='구분' if lang == 'ko' else 'Type',
+                    barmode='group',
+                    title='테스트셋별 법령/비법령 정답률 비교' if lang == 'ko' else 'Law vs Non-Law Accuracy by Test Set',
+                    color_discrete_map={
+                        '법령' if lang == 'ko' else 'Law': '#FF6B6B',
+                        '비법령' if lang == 'ko' else 'Non-Law': '#4ECDC4'
+                    }
+                )
+                fig.update_traces(
+                    marker_line_color='black',
+                    marker_line_width=1.5
+                )
+                fig.update_layout(
+                    height=400,
+                    yaxis_title='정답률 (%)' if lang == 'ko' else 'Accuracy (%)',
+                    xaxis_title='테스트명' if lang == 'ko' else 'Test Name',
+                    yaxis=dict(range=[0, 100]),
+                    legend=dict(
+                        title='구분' if lang == 'ko' else 'Type',
+                        orientation="h",
+                        yanchor="bottom",
+                        y=1.02,
+                        xanchor="right",
+                        x=1,
+                        font=dict(size=annotation_size)
+                    )
+                )
+                fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                fig.update_yaxes(tickfont=dict(size=annotation_size))
+                st.plotly_chart(fig, use_container_width=True)
+            
+                # 정답률 차이 막대 그래프
+                st.markdown("#### " + ("정답률 차이 (법령 - 비법령)" if lang == 'ko' else "Accuracy Difference (Law - Non-Law)"))
+                fig2 = px.bar(
+                    table2,
+                    x='테스트명' if lang == 'ko' else 'Test Name',
+                    y='정답률 차이 (법령-비법령)' if lang == 'ko' else 'Accuracy Diff (Law-NonLaw)',
+                    text='정답률 차이 (법령-비법령)' if lang == 'ko' else 'Accuracy Diff (Law-NonLaw)',
+                    color='정답률 차이 (법령-비법령)' if lang == 'ko' else 'Accuracy Diff (Law-NonLaw)',
+                    color_continuous_scale='RdYlGn',
+                    title='법령 문제의 상대적 난이도' if lang == 'ko' else 'Relative Difficulty of Law Problems'
+                )
+                fig2.update_traces(
+                    texttemplate='%{text:.1f}%p',
+                    textposition='outside',
+                    textfont=dict(size=annotation_size),
+                    marker_line_color='black',
+                    marker_line_width=1.5
+                )
+                fig2.update_layout(
+                    height=400,
+                    showlegend=False,
+                    yaxis_title='정답률 차이 (%p)' if lang == 'ko' else 'Accuracy Difference (%p)',
+                    xaxis_title='테스트명' if lang == 'ko' else 'Test Name'
+                )
+                fig2.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                fig2.update_yaxes(tickfont=dict(size=annotation_size))
+                st.plotly_chart(fig2, use_container_width=True)
+            
+                # 인사이트 표시
+                avg_diff = table2['정답률 차이 (법령-비법령)' if lang == 'ko' else 'Accuracy Diff (Law-NonLaw)'].mean()
+                if avg_diff > 0:
+                    insight = f"💡 평균적으로 법령 문제가 비법령 문제보다 {abs(avg_diff):.1f}%p 더 쉽습니다." if lang == 'ko' else f"💡 On average, law problems are {abs(avg_diff):.1f}%p easier than non-law problems."
+                elif avg_diff < 0:
+                    insight = f"💡 평균적으로 법령 문제가 비법령 문제보다 {abs(avg_diff):.1f}%p 더 어렵습니다." if lang == 'ko' else f"💡 On average, law problems are {abs(avg_diff):.1f}%p harder than non-law problems."
+                else:
+                    insight = "💡 법령 문제와 비법령 문제의 난이도가 비슷합니다." if lang == 'ko' else "💡 Law and non-law problems have similar difficulty."
+                st.info(insight)
+            else:
+                st.info("법령 데이터가 없습니다." if lang == 'ko' else "No law classification data available.")
+        
+            st.markdown("---")
+        
+            # 표 3: 모델 출시 시기와 성능
+            st.subheader("📅 " + ("표 3: 모델 출시 시기와 SafetyQ&A 성능" if lang == 'ko' else "Table 3: Model Release Date and Performance"))
+            table3 = create_model_release_performance_table(filtered_df, lang)
+            if table3 is not None and len(table3) > 0:
+                # 날짜를 숫자로 변환 (YYYY-MM -> YYYYMM)
+                table3_copy = table3.copy()
+                date_col = '출시 시기' if lang == 'ko' else 'Release Date'
+                table3_copy['date_numeric'] = table3_copy[date_col].str.replace('-', '').astype(int)
+            
+                display_table_with_download(table3, "", "table3_model_release_performance.xlsx", lang)
+        
+            st.markdown("---")
+        
+            # 표 4: 응답 시간 및 파라미터
+            st.subheader("⏱️ " + ("표 4: 모델별 평균 응답 시간 및 정답률" if lang == 'ko' else "Table 4: Response Time and Accuracy by Model"))
+            table4 = create_response_time_parameters_table(filtered_df, lang)
+            if table4 is not None and len(table4) > 0:
+                display_table_with_download(table4, "", "table4_response_time_parameters.xlsx", lang)
+            else:
+                st.info("응답 시간 데이터가 없습니다." if lang == 'ko' else "No response time data available.")
+        
+            st.markdown("---")
+        
+            # 표 5: 모델별 법령/비법령 성능 비교 (NEW!)
+            st.subheader("⚖️ " + ("표 5: 모델별 법령 문항 vs 비법령 문항 성능 비교" if lang == 'ko' else "Table 5: Law vs Non-Law Performance by Model"))
+            table5 = create_model_law_performance_table(filtered_df, lang)
+            if table5 is not None and len(table5) > 0:
+                display_table_with_download(table5, "", "table5_model_law_performance.xlsx", lang)
+            else:
+                st.info("법령 데이터가 없습니다." if lang == 'ko' else "No law classification data available.")
+        
+            st.markdown("---")
+        
+            # 표 6: 출제 연도별 상관분석
+            st.subheader("📅 " + ("표 6: 출제 연도별 평균 정답률 및 상관관계" if lang == 'ko' else "Table 6: Accuracy by Year with Correlation"))
+            table6 = create_year_correlation_table(filtered_df, lang)
+            if table6 is not None and len(table6) > 0:
+                display_table_with_download(table6, "", "table6_year_correlation.xlsx", lang)
+            else:
+                st.info("연도 데이터가 없습니다." if lang == 'ko' else "No year data available.")
+        
+            st.markdown("---")
+        
+            # 표 7: 난이도 구간별 분포
+            st.subheader("📈 " + ("표 7: 난이도 구간별 문항 분포" if lang == 'ko' else "Table 7: Problem Distribution by Difficulty"))
+            table7 = create_difficulty_distribution_table(filtered_df, lang)
+            if table7 is not None and len(table7) > 0:
+                display_table_with_download(table7, "", "table7_difficulty_distribution.xlsx", lang)
+        
+            st.markdown("---")
+        
+            # 표 8: 난이도 구간별 모델 성능 (NEW!)
+            st.subheader("🎯 " + ("표 8: 주요 모델의 난이도 구간별 정답률" if lang == 'ko' else "Table 8: Model Performance by Difficulty Level"))
+            table8 = create_difficulty_model_performance_table(filtered_df, lang)
+            if table8 is not None and len(table8) > 0:
+                display_table_with_download(table8, "", "table8_difficulty_model_performance.xlsx", lang)
+            else:
+                st.info("난이도 분석 데이터가 없습니다." if lang == 'ko' else "No difficulty analysis data available.")
+        
+            st.markdown("---")
+        
+            # 표 9: 비용 효율성 비교 (NEW!)
+            st.subheader("💰 " + ("표 9: 주요 상업용 모델의 비용 효율성 비교" if lang == 'ko' else "Table 9: Cost Efficiency Comparison"))
+            table9 = create_cost_efficiency_table(filtered_df, lang)
+            if table9 is not None and len(table9) > 0:
+                display_table_with_download(table9, "", "table9_cost_efficiency.xlsx", lang)
+            else:
+                st.info("토큰/비용 데이터가 없습니다." if lang == 'ko' else "No token/cost data available.")
+        
+            st.markdown("---")
+        
+            # 표 10: 오답 패턴
+            st.subheader("❌ " + ("표 10: 주요 오답 패턴 및 빈도" if lang == 'ko' else "Table 10: Major Error Patterns"))
+            table10 = create_incorrect_pattern_table(filtered_df, lang)
+            if table10 is not None and len(table10) > 0:
+                display_table_with_download(table10, "", "table10_error_patterns.xlsx", lang)
+        
+            st.markdown("---")
+        
+            # 표 11: 범용 벤치마크 비교 (NEW!)
+            st.subheader("📊 " + ("표 11: SafetyQ&A와 범용 벤치마크 성능 비교" if lang == 'ko' else "Table 11: SafetyQ&A vs General Benchmarks"))
+            table11 = create_benchmark_comparison_table(filtered_df, lang)
+            if table11 is not None and len(table11) > 0:
+                display_table_with_download(table11, "", "table11_benchmark_comparison.xlsx", lang)
+                st.caption("💡 " + ("범용 벤치마크 점수는 SafetyQ&A 성능 기반 추정치입니다." if lang == 'ko' else "General benchmark scores are estimates based on SafetyQ&A performance."))
+            else:
+                st.info("벤치마크 비교 데이터를 생성할 수 없습니다." if lang == 'ko' else "Cannot generate benchmark comparison data.")
+        
+            # ========== 추가 시각화 섹션 ==========
+        
+            st.markdown("---")
+            st.markdown("### 📈 " + ("추가 시각화" if lang == 'ko' else "Additional Visualizations"))
+            st.markdown("---")
+        
+            # Figure 1: 모델별 전체 정답률 막대 그래프 (NEW!)
+            st.subheader("📊 " + ("Figure 1: 모델별 전체 정답률 막대 그래프" if lang == 'ko' else "Figure 1: Overall Accuracy by Model"))
+        
+            model_acc = filtered_df.groupby('모델')['정답여부'].mean() * 100
+            model_acc_df = model_acc.reset_index()
+            model_acc_df.columns = ['모델' if lang == 'ko' else 'Model', '정답률' if lang == 'ko' else 'Accuracy']
+            model_acc_df = model_acc_df.sort_values('정답률' if lang == 'ko' else 'Accuracy', ascending=False)
+        
+            # 평균선 계산
+            avg_acc = model_acc_df['정답률' if lang == 'ko' else 'Accuracy'].mean()
+        
             fig = px.bar(
-                table1,
-                x='테스트명' if lang == 'ko' else 'Test Name',
-                y='평균 정답률 (%)' if lang == 'ko' else 'Avg Accuracy (%)',
-                text='평균 정답률 (%)' if lang == 'ko' else 'Avg Accuracy (%)',
-                color='평균 정답률 (%)' if lang == 'ko' else 'Avg Accuracy (%)',
-                color_continuous_scale='RdYlGn',
-                title='테스트셋별 평균 정답률' if lang == 'ko' else 'Average Accuracy by Test Set'
+                model_acc_df,
+                x='모델' if lang == 'ko' else 'Model',
+                y='정답률' if lang == 'ko' else 'Accuracy',
+                title='모델별 전체 정답률' if lang == 'ko' else 'Overall Accuracy by Model',
+                text='정답률' if lang == 'ko' else 'Accuracy',
+                color='정답률' if lang == 'ko' else 'Accuracy',
+                color_continuous_scale='RdYlGn'
             )
+        
+            # 평균선 추가
+            fig.add_hline(
+                y=avg_acc,
+                line_dash="dash",
+                line_color="red",
+                annotation_text=f"평균: {avg_acc:.1f}%" if lang == 'ko' else f"Average: {avg_acc:.1f}%",
+                annotation_position="right"
+            )
+        
             fig.update_traces(
                 texttemplate='%{text:.1f}%',
                 textposition='outside',
@@ -6112,8 +8084,9 @@ def main():
                 marker_line_width=1.5
             )
             fig.update_layout(
-                height=400,
+                height=500,
                 showlegend=False,
+<<<<<<< HEAD
                 yaxis_title='평균 정답률 (%)' if lang == 'ko' else 'Avg Accuracy (%)',
                 xaxis_title='테스트명' if lang == 'ko' else 'Test Name',
                 yaxis=dict(range=[0, 100])
@@ -6513,28 +8486,38 @@ def main():
             fig.update_traces(marker_line_color='black', marker_line_width=1.5)
             fig.update_layout(
                 height=500,
+=======
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                 yaxis_title='정답률 (%)' if lang == 'ko' else 'Accuracy (%)',
                 xaxis_title='모델' if lang == 'ko' else 'Model',
-                yaxis=dict(range=[0, 100]),
-                legend=dict(font=dict(size=annotation_size))
+                yaxis=dict(range=[0, 100])
             )
             fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
             fig.update_yaxes(tickfont=dict(size=annotation_size))
+<<<<<<< HEAD
             st.plotly_chart(fig, width='stretch')
             
+=======
+            st.plotly_chart(fig, use_container_width=True)
+        
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
             st.markdown("---")
         
-        # Figure 7: 출제 연도별 추이 선 그래프 (NEW!)
-        if table6 is not None and len(table6) > 0:
-            st.subheader("📈 " + ("Figure 7: 출제 연도별 정답률 추이" if lang == 'ko' else "Figure 7: Accuracy Trend by Year"))
+            # Figure 2: 테스트셋별 정답률 박스플롯 (NEW!)
+            if '테스트명' in filtered_df.columns and '정답여부' in filtered_df.columns:
+                st.subheader("📦 " + ("Figure 2: 테스트셋별 정답률 박스플롯" if lang == 'ko' else "Figure 2: Accuracy Distribution by Test Set"))
             
-            # 상관계수, p-value 행 제거
-            year_col = '연도' if lang == 'ko' else 'Year'
-            # 실제 컬럼명 확인 (표 6에서는 '평균 정답률'로 저장됨)
-            acc_col = '평균 정답률' if lang == 'ko' else 'Avg Accuracy'
+                # 모델별, 테스트별 정답률 계산
+                test_model_acc = filtered_df.groupby(['테스트명', '모델'])['정답여부'].mean().reset_index()
+                test_model_acc['정답률'] = test_model_acc['정답여부'] * 100
             
-            plot_data = table6.copy()
+                # 디버깅 정보 (펼치기/접기)
+                with st.expander("🔍 " + ("디버깅 정보" if lang == 'ko' else "Debug Info")):
+                    st.write("**정답률 범위:**", f"{test_model_acc['정답률'].min():.2f}% ~ {test_model_acc['정답률'].max():.2f}%")
+                    st.write("**데이터 샘플:**")
+                    st.dataframe(test_model_acc.head(10))
             
+<<<<<<< HEAD
             # 연도와 정답률이 모두 숫자인 행만 선택
             if year_col in plot_data.columns and acc_col in plot_data.columns:
                 # 1. 특정 문자열 행 제거
@@ -6640,8 +8623,164 @@ def main():
                      "개별 그래프" if lang == 'ko' else "Individual Charts"],
                     horizontal=True,
                     key="year_testset_graph_type"
+=======
+                fig = px.box(
+                    test_model_acc,
+                    x='테스트명',
+                    y='정답률',
+                    title='테스트셋별 정답률 분포 (모델별)' if lang == 'ko' else 'Accuracy Distribution by Test Set (per Model)',
+                    labels={
+                        '테스트명': '테스트명' if lang == 'ko' else 'Test Name',
+                        '정답률': '정답률 (%)' if lang == 'ko' else 'Accuracy (%)'
+                    },
+                    color='테스트명',
+                    points='all'  # 모든 데이터 포인트 표시
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                 )
+            
+                fig.update_layout(
+                    height=500,
+                    yaxis_title='정답률 (%)' if lang == 'ko' else 'Accuracy (%)',
+                    xaxis_title='테스트명' if lang == 'ko' else 'Test Name',
+                    yaxis=dict(range=[0, 100]),
+                    showlegend=False
+                )
+                fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                fig.update_yaxes(tickfont=dict(size=annotation_size))
+                st.plotly_chart(fig, use_container_width=True)
+            
+                st.markdown("---")
+        
+            # Figure 3: 과목 유형별 히트맵 (NEW!)
+            if 'Subject' in filtered_df.columns:
+                st.subheader("🔥 " + ("Figure 3: 과목 유형별 평균 정답률 히트맵" if lang == 'ko' else "Figure 3: Accuracy Heatmap by Subject Type"))
+            
+                # 모델 × 과목 히트맵
+                subject_model = filtered_df.groupby(['모델', 'Subject'])['정답여부'].mean() * 100
+                subject_model_pivot = subject_model.unstack(fill_value=0)
+            
+                fig = go.Figure(data=go.Heatmap(
+                    z=subject_model_pivot.values,
+                    x=subject_model_pivot.columns,
+                    y=subject_model_pivot.index,
+                    colorscale='RdYlGn',
+                    text=np.round(subject_model_pivot.values, 1),
+                    texttemplate='%{text:.1f}',
+                    textfont={"size": annotation_size},
+                    colorbar=dict(title="정답률 (%)" if lang == 'ko' else "Accuracy (%)")
+                ))
+            
+                fig.update_layout(
+                    title='모델 × 과목 정답률 히트맵' if lang == 'ko' else 'Model × Subject Accuracy Heatmap',
+                    height=600,
+                    xaxis_title='과목' if lang == 'ko' else 'Subject',
+                    yaxis_title='모델' if lang == 'ko' else 'Model'
+                )
+                fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                fig.update_yaxes(tickfont=dict(size=annotation_size))
+                st.plotly_chart(fig, use_container_width=True)
+            
+                st.markdown("---")
+        
+            # Figure 5: 응답 시간-정답률 산점도 (NEW!)
+            if table4 is not None and len(table4) > 0:
+                st.subheader("⚡ " + ("Figure 5: 응답 시간-정답률 산점도" if lang == 'ko' else "Figure 5: Response Time vs Accuracy"))
+            
+                # 산점도 생성 (size 제거 - 파라미터 수로 색상 표현)
+                fig = px.scatter(
+                    table4,
+                    x='평균 응답시간 (초)' if lang == 'ko' else 'Avg Response Time (s)',
+                    y='정답률 (%)' if lang == 'ko' else 'Accuracy (%)',
+                    text='모델명' if lang == 'ko' else 'Model',
+                    color='파라미터 수 (B)' if lang == 'ko' else 'Parameters (B)',
+                    title='응답 시간 vs 정확도' if lang == 'ko' else 'Response Time vs Accuracy',
+                    color_continuous_scale='Viridis'
+                )
+            
+                fig.update_traces(
+                    textposition='top center',
+                    textfont=dict(size=annotation_size),
+                    marker=dict(size=15, line=dict(width=1.5, color='black'))
+                )
+                fig.update_layout(
+                    height=500,
+                    yaxis=dict(range=[0, 100])
+                )
+                fig.update_xaxes(tickfont=dict(size=annotation_size))
+                fig.update_yaxes(tickfont=dict(size=annotation_size))
+                st.plotly_chart(fig, use_container_width=True)
+            
+                st.info("💡 " + ("왼쪽 위(빠른 시간 + 높은 정확도)가 가장 효율적입니다." if lang == 'ko' else "Top left (fast time + high accuracy) is most efficient."))
+            
+                st.markdown("---")
+        
+            # Figure 6: 법령/비법령 그룹 막대 차트 (NEW!)
+            if table5 is not None and len(table5) > 0:
+                st.subheader("⚖️ " + ("Figure 6: 법령/비법령 문항 정답률 비교" if lang == 'ko' else "Figure 6: Law vs Non-Law Accuracy Comparison"))
+            
+                # 데이터 준비
+                chart_data = []
+                for _, row in table5.iterrows():
+                    model = row['모델명' if lang == 'ko' else 'Model']
+                    chart_data.append({
+                        '모델' if lang == 'ko' else 'Model': model,
+                        '구분' if lang == 'ko' else 'Type': '법령' if lang == 'ko' else 'Law',
+                        '정답률 (%)' if lang == 'ko' else 'Accuracy (%)': row['법령 문항 정답률 (%)' if lang == 'ko' else 'Law Accuracy (%)']
+                    })
+                    chart_data.append({
+                        '모델' if lang == 'ko' else 'Model': model,
+                        '구분' if lang == 'ko' else 'Type': '비법령' if lang == 'ko' else 'Non-Law',
+                        '정답률 (%)' if lang == 'ko' else 'Accuracy (%)': row['비법령 문항 정답률 (%)' if lang == 'ko' else 'Non-Law Accuracy (%)']
+                    })
+            
+                chart_df = pd.DataFrame(chart_data)
+            
+                fig = px.bar(
+                    chart_df,
+                    x='모델' if lang == 'ko' else 'Model',
+                    y='정답률 (%)' if lang == 'ko' else 'Accuracy (%)',
+                    color='구분' if lang == 'ko' else 'Type',
+                    barmode='group',
+                    title='모델별 법령/비법령 정답률 비교' if lang == 'ko' else 'Law vs Non-Law Accuracy by Model',
+                    color_discrete_map={
+                        '법령' if lang == 'ko' else 'Law': '#FF6B6B',
+                        '비법령' if lang == 'ko' else 'Non-Law': '#4ECDC4'
+                    }
+                )
+            
+                fig.update_traces(marker_line_color='black', marker_line_width=1.5)
+                fig.update_layout(
+                    height=500,
+                    yaxis_title='정답률 (%)' if lang == 'ko' else 'Accuracy (%)',
+                    xaxis_title='모델' if lang == 'ko' else 'Model',
+                    yaxis=dict(range=[0, 100]),
+                    legend=dict(font=dict(size=annotation_size))
+                )
+                fig.update_xaxes(tickangle=45, tickfont=dict(size=annotation_size))
+                fig.update_yaxes(tickfont=dict(size=annotation_size))
+                st.plotly_chart(fig, use_container_width=True)
+            
+                st.markdown("---")
+        
+            # Figure 7: 출제 연도별 추이 선 그래프 (NEW!)
+            if table6 is not None and len(table6) > 0:
+                st.subheader("📈 " + ("Figure 7: 출제 연도별 정답률 추이" if lang == 'ko' else "Figure 7: Accuracy Trend by Year"))
+            
+                # 상관계수, p-value 행 제거
+                year_col = '연도' if lang == 'ko' else 'Year'
+                # 실제 컬럼명 확인 (표 6에서는 '평균 정답률'로 저장됨)
+                acc_col = '평균 정답률' if lang == 'ko' else 'Avg Accuracy'
+            
+                plot_data = table6.copy()
+            
+                # 연도와 정답률이 모두 숫자인 행만 선택
+                if year_col in plot_data.columns and acc_col in plot_data.columns:
+                    # 1. 특정 문자열 행 제거
+                    exclude_keywords = ['상관계수', 'p-value', 'correlation', 'Correlation']
+                    for keyword in exclude_keywords:
+                        plot_data = plot_data[~plot_data[year_col].astype(str).str.contains(keyword, na=False)]
                 
+<<<<<<< HEAD
                 if graph_type == ("통합 그래프" if lang == 'ko' else "Combined Chart"):
                     # 통합 꺾은선 그래프
                     fig = px.line(
@@ -6698,39 +8837,204 @@ def main():
                             x='연도',
                             y='정답률',
                             title='전체 연도별 정답률 추이' if lang == 'ko' else 'Overall Accuracy Trend by Year',
+=======
+                    # 2. 연도가 숫자로 변환 가능한 행만 선택
+                    def is_numeric_convertible(x):
+                        try:
+                            float(str(x))
+                            return True
+                        except (ValueError, TypeError):
+                            return False
+                
+                    plot_data = plot_data[plot_data[year_col].apply(is_numeric_convertible)]
+                    plot_data = plot_data[plot_data[acc_col].apply(is_numeric_convertible)]
+                
+                    # 3. 데이터 타입 변환
+                    plot_data[year_col] = plot_data[year_col].astype(int)
+                    plot_data[acc_col] = plot_data[acc_col].astype(float)
+            
+                if len(plot_data) > 0:
+                    try:
+                        fig = px.line(
+                            plot_data,
+                            x=year_col,
+                            y=acc_col,
+                            title='연도별 평균 정답률 추이' if lang == 'ko' else 'Average Accuracy Trend by Year',
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                             markers=True,
-                            text='정답률'
+                            text=acc_col
                         )
-                        fig_overall.update_traces(
+                    
+                        fig.update_traces(
                             texttemplate='%{text:.1f}%',
                             textposition='top center',
                             textfont=dict(size=annotation_size),
-                            marker=dict(size=12, line=dict(width=2, color='black')),
-                            line=dict(width=4, color='#1f77b4')
+                            marker=dict(size=10, line=dict(width=2, color='black')),
+                            line=dict(width=3)
                         )
-                        fig_overall.update_layout(
-                            height=400,
+                        fig.update_layout(
+                            height=500,
+                            yaxis_title='평균 정답률 (%)' if lang == 'ko' else 'Avg Accuracy (%)',
+                            xaxis_title='출제 연도' if lang == 'ko' else 'Year',
+                            yaxis=dict(range=[0, 100])
+                        )
+                        fig.update_xaxes(tickfont=dict(size=annotation_size))
+                        fig.update_yaxes(tickfont=dict(size=annotation_size))
+                        st.plotly_chart(fig, use_container_width=True)
+                    except Exception as e:
+                        st.error(f"{'차트 생성 오류' if lang == 'ko' else 'Chart creation error'}: {str(e)}")
+                        with st.expander("🔍 " + ("디버깅 정보" if lang == 'ko' else "Debug Info")):
+                            st.write("**필터링된 데이터:**")
+                            st.dataframe(plot_data)
+                else:
+                    st.warning("연도 데이터가 충분하지 않습니다." if lang == 'ko' else "Insufficient year data.")
+            
+                st.markdown("---")
+        
+            # Figure 7-1: 테스트셋별 연도별 정답률 추이 (NEW!)
+            st.subheader("📈 " + ("Figure 7-1: 테스트셋별 연도별 정답률 추이" if lang == 'ko' else "Figure 7-1: Accuracy Trend by Year and Test Set"))
+        
+            if 'Year' in filtered_df.columns:
+                # 연도를 정수로 변환
+                year_int_series = filtered_df['Year'].apply(safe_convert_to_int)
+                valid_year_mask = year_int_series.notna()
+            
+                if valid_year_mask.any():
+                    # 분석용 데이터프레임 생성
+                    year_test_df = pd.DataFrame({
+                        'Year_Int': year_int_series[valid_year_mask],
+                        '정답여부': filtered_df.loc[valid_year_mask, '정답여부'],
+                        '테스트명': filtered_df.loc[valid_year_mask, '테스트명']
+                    })
+                
+                    # 1. 전체 연도별 정답률
+                    overall_year_acc = year_test_df.groupby('Year_Int')['정답여부'].mean() * 100
+                    overall_year_acc = overall_year_acc.reset_index()
+                    overall_year_acc.columns = ['연도', '정답률']
+                    overall_year_acc['테스트명'] = '전체 (Overall)' if lang == 'ko' else 'Overall'
+                
+                    # 2. 테스트셋별 연도별 정답률
+                    testset_year_acc = year_test_df.groupby(['테스트명', 'Year_Int'])['정답여부'].mean() * 100
+                    testset_year_acc = testset_year_acc.reset_index()
+                    testset_year_acc.columns = ['테스트명', '연도', '정답률']
+                
+                    # 전체와 테스트셋별 데이터 결합
+                    combined_data = pd.concat([overall_year_acc, testset_year_acc], ignore_index=True)
+                    combined_data['연도'] = combined_data['연도'].astype(int)
+                    combined_data = combined_data.sort_values(['테스트명', '연도'])
+                
+                    # 테스트셋 목록 (전체를 맨 앞으로)
+                    test_names = combined_data['테스트명'].unique().tolist()
+                    overall_name = '전체 (Overall)' if lang == 'ko' else 'Overall'
+                    if overall_name in test_names:
+                        test_names.remove(overall_name)
+                        test_names = [overall_name] + sorted(test_names)
+                
+                    # 그래프 유형 선택
+                    graph_type = st.radio(
+                        "그래프 표시 방식" if lang == 'ko' else "Graph Display Type",
+                        ["통합 그래프" if lang == 'ko' else "Combined Chart", 
+                         "개별 그래프" if lang == 'ko' else "Individual Charts"],
+                        horizontal=True,
+                        key="year_testset_graph_type"
+                    )
+                
+                    if graph_type == ("통합 그래프" if lang == 'ko' else "Combined Chart"):
+                        # 통합 꺾은선 그래프
+                        fig = px.line(
+                            combined_data,
+                            x='연도',
+                            y='정답률',
+                            color='테스트명',
+                            title='테스트셋별 연도별 정답률 추이' if lang == 'ko' else 'Accuracy Trend by Year and Test Set',
+                            markers=True,
+                            category_orders={'테스트명': test_names}
+                        )
+                    
+                        # 전체 라인을 굵게 표시
+                        for trace in fig.data:
+                            if trace.name == overall_name:
+                                trace.line.width = 4
+                                trace.line.dash = 'solid'
+                                trace.marker.size = 12
+                            else:
+                                trace.line.width = 2
+                                trace.marker.size = 8
+                    
+                        fig.update_traces(
+                            marker=dict(line=dict(width=1, color='black'))
+                        )
+                        fig.update_layout(
+                            height=550,
                             yaxis_title='정답률 (%)' if lang == 'ko' else 'Accuracy (%)',
                             xaxis_title='출제 연도' if lang == 'ko' else 'Year',
                             yaxis=dict(range=[0, 100]),
-                            showlegend=False
+                            legend_title='테스트셋' if lang == 'ko' else 'Test Set',
+                            legend=dict(
+                                orientation="h",
+                                yanchor="bottom",
+                                y=-0.3,
+                                xanchor="center",
+                                x=0.5,
+                                font=dict(size=annotation_size)
+                            )
                         )
+<<<<<<< HEAD
                         fig_overall.update_xaxes(tickfont=dict(size=annotation_size))
                         fig_overall.update_yaxes(tickfont=dict(size=annotation_size))
                         st.plotly_chart(fig_overall, width='stretch')
+=======
+                        fig.update_xaxes(tickfont=dict(size=annotation_size))
+                        fig.update_yaxes(tickfont=dict(size=annotation_size))
+                        st.plotly_chart(fig, use_container_width=True)
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                     
-                    st.markdown("---")
+                    else:
+                        # 개별 그래프 - 전체 + 각 테스트셋별
+                        # 먼저 전체 그래프
+                        st.markdown("#### " + ("📊 전체 연도별 정답률" if lang == 'ko' else "📊 Overall Accuracy by Year"))
+                        overall_data = combined_data[combined_data['테스트명'] == overall_name]
                     
-                    # 테스트셋별 개별 그래프
-                    st.markdown("#### " + ("📊 테스트셋별 연도별 정답률" if lang == 'ko' else "📊 Accuracy by Year per Test Set"))
+                        if len(overall_data) > 0:
+                            fig_overall = px.line(
+                                overall_data,
+                                x='연도',
+                                y='정답률',
+                                title='전체 연도별 정답률 추이' if lang == 'ko' else 'Overall Accuracy Trend by Year',
+                                markers=True,
+                                text='정답률'
+                            )
+                            fig_overall.update_traces(
+                                texttemplate='%{text:.1f}%',
+                                textposition='top center',
+                                textfont=dict(size=annotation_size),
+                                marker=dict(size=12, line=dict(width=2, color='black')),
+                                line=dict(width=4, color='#1f77b4')
+                            )
+                            fig_overall.update_layout(
+                                height=400,
+                                yaxis_title='정답률 (%)' if lang == 'ko' else 'Accuracy (%)',
+                                xaxis_title='출제 연도' if lang == 'ko' else 'Year',
+                                yaxis=dict(range=[0, 100]),
+                                showlegend=False
+                            )
+                            fig_overall.update_xaxes(tickfont=dict(size=annotation_size))
+                            fig_overall.update_yaxes(tickfont=dict(size=annotation_size))
+                            st.plotly_chart(fig_overall, use_container_width=True)
                     
-                    testset_only = [t for t in test_names if t != overall_name]
+                        st.markdown("---")
                     
-                    # 2열 레이아웃으로 표시
-                    cols = st.columns(2)
-                    for idx, test_name in enumerate(testset_only):
-                        test_data = combined_data[combined_data['테스트명'] == test_name]
+                        # 테스트셋별 개별 그래프
+                        st.markdown("#### " + ("📊 테스트셋별 연도별 정답률" if lang == 'ko' else "📊 Accuracy by Year per Test Set"))
+                    
+                        testset_only = [t for t in test_names if t != overall_name]
+                    
+                        # 2열 레이아웃으로 표시
+                        cols = st.columns(2)
+                        for idx, test_name in enumerate(testset_only):
+                            test_data = combined_data[combined_data['테스트명'] == test_name]
                         
+<<<<<<< HEAD
                         if len(test_data) > 0:
                             with cols[idx % 2]:
                                 fig_test = px.line(
@@ -6759,16 +9063,47 @@ def main():
                                 fig_test.update_xaxes(tickfont=dict(size=annotation_size))
                                 fig_test.update_yaxes(tickfont=dict(size=annotation_size))
                                 st.plotly_chart(fig_test, width='stretch')
+=======
+                            if len(test_data) > 0:
+                                with cols[idx % 2]:
+                                    fig_test = px.line(
+                                        test_data,
+                                        x='연도',
+                                        y='정답률',
+                                        title=f'{test_name}',
+                                        markers=True,
+                                        text='정답률'
+                                    )
+                                    fig_test.update_traces(
+                                        texttemplate='%{text:.1f}%',
+                                        textposition='top center',
+                                        textfont=dict(size=annotation_size),
+                                        marker=dict(size=10, line=dict(width=1.5, color='black')),
+                                        line=dict(width=3)
+                                    )
+                                    fig_test.update_layout(
+                                        height=350,
+                                        yaxis_title='정답률 (%)' if lang == 'ko' else 'Accuracy (%)',
+                                        xaxis_title='출제 연도' if lang == 'ko' else 'Year',
+                                        yaxis=dict(range=[0, 100]),
+                                        showlegend=False,
+                                        margin=dict(t=50, b=50)
+                                    )
+                                    fig_test.update_xaxes(tickfont=dict(size=annotation_size))
+                                    fig_test.update_yaxes(tickfont=dict(size=annotation_size))
+                                    st.plotly_chart(fig_test, use_container_width=True)
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
                 
-                # 데이터 테이블 (접이식)
-                with st.expander("📋 " + ("상세 데이터 보기" if lang == 'ko' else "View Detailed Data")):
-                    # 피벗 테이블로 변환
-                    pivot_data = combined_data.pivot(index='테스트명', columns='연도', values='정답률')
-                    pivot_data = pivot_data.reindex(test_names)
+                    # 데이터 테이블 (접이식)
+                    with st.expander("📋 " + ("상세 데이터 보기" if lang == 'ko' else "View Detailed Data")):
+                        # 피벗 테이블로 변환
+                        pivot_data = combined_data.pivot(index='테스트명', columns='연도', values='정답률')
+                        pivot_data = pivot_data.reindex(test_names)
                     
-                    # 평균 컬럼 추가
-                    pivot_data['평균' if lang == 'ko' else 'Avg'] = pivot_data.mean(axis=1)
+                        # 평균 컬럼 추가
+                        pivot_data['평균' if lang == 'ko' else 'Avg'] = pivot_data.mean(axis=1)
                     
+<<<<<<< HEAD
                     # 소수점 1자리로 포맷팅
                     st.dataframe(
                         pivot_data.style.format("{:.1f}%")
@@ -6928,9 +9263,29 @@ def main():
                 )
                 
                 st.plotly_chart(fig, width='stretch')
+=======
+                        # 소수점 1자리로 포맷팅
+                        st.dataframe(
+                            pivot_data.style.format("{:.1f}%")
+                            .background_gradient(cmap='RdYlGn', axis=None, vmin=0, vmax=100),
+                            use_container_width=True
+                        )
+                    
+                        # 다운로드 버튼
+                        csv_data = pivot_data.reset_index().to_csv(index=False, encoding='utf-8-sig')
+                        st.download_button(
+                            label="📥 CSV " + ("다운로드" if lang == 'ko' else "Download"),
+                            data=csv_data,
+                            file_name="year_testset_accuracy.csv",
+                            mime="text/csv"
+                        )
+                else:
+                    st.info("유효한 연도 데이터가 없습니다." if lang == 'ko' else "No valid year data available.")
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
             else:
-                st.info("레이더 차트를 생성할 데이터가 부족합니다." if lang == 'ko' else "Insufficient data for radar chart.")
+                st.info("연도(Year) 컬럼이 데이터에 없습니다." if lang == 'ko' else "Year column not found in data.")
         
+<<<<<<< HEAD
         st.markdown("---")
         
         # Figure 9: 비용 대비 성능 산점도 (NEW!)
@@ -6958,12 +9313,15 @@ def main():
             
             st.info("💡 " + ("왼쪽 위(낮은 비용 + 높은 정확도)가 가장 효율적입니다." if lang == 'ko' else "Top left (low cost + high accuracy) is most efficient."))
             
+=======
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
             st.markdown("---")
         
-        # Figure 10: 오답 패턴 원형 차트
-        if table10 is not None and len(table10) > 0:
-            st.subheader("🥧 " + ("Figure 10: 오답 패턴 빈도 원형 차트" if lang == 'ko' else "Figure 10: Error Pattern Distribution"))
+            # Figure 4: 출시 시기-성능 산점도
+            if table3 is not None and len(table3) > 0:
+                st.subheader("📅 " + ("Figure 4: 출시 시기-성능 추이" if lang == 'ko' else "Figure 4: Release Date vs Performance"))
             
+<<<<<<< HEAD
             fig = px.pie(
                 table10,
                 values='문항 수' if lang == 'ko' else 'Problem Count',
@@ -6991,64 +9349,263 @@ def main():
                     'wrong': wrong_questions,
                     'all': all_questions
                 }
+=======
+                # 날짜를 숫자로 변환 (YYYY-MM -> YYYYMM)
+                table3_plot = table3.copy()
+                date_col = '출시 시기' if lang == 'ko' else 'Release Date'
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
             
-            # 모델 쌍별 오답 일치도 계산 (최적화된 버전)
-            agreement_matrix = []
-            
-            for model1 in models_list:
-                row = []
-                m1_data = model_wrong_dict[model1]
+                try:
+                    table3_plot['date_numeric'] = table3_plot[date_col].str.replace('-', '').astype(int)
+                except:
+                    st.warning("날짜 형식 변환 오류" if lang == 'ko' else "Date format conversion error")
+                    st.markdown("---")
+                    # Figure 8로 건너뛰기
+                else:
+                    # 추세선 그리기 시도 (statsmodels 필요)
+                    try:
+                        fig = px.scatter(
+                            table3_plot,
+                            x='date_numeric',
+                            y='평균 정답률 (%)' if lang == 'ko' else 'Avg Accuracy (%)',
+                            text='모델명' if lang == 'ko' else 'Model',
+                            title='모델 출시 시기와 성능 관계 (추세선 포함)' if lang == 'ko' else 'Model Release Date vs Performance (with Trendline)',
+                            trendline='ols',
+                            labels={'date_numeric': '출시 시기' if lang == 'ko' else 'Release Date'}
+                        )
+                        use_trendline = True
+                    except (ImportError, ModuleNotFoundError, Exception):
+                        # statsmodels가 없거나 오류 발생 시 추세선 없이 그리기
+                        fig = px.scatter(
+                            table3_plot,
+                            x='date_numeric',
+                            y='평균 정답률 (%)' if lang == 'ko' else 'Avg Accuracy (%)',
+                            text='모델명' if lang == 'ko' else 'Model',
+                            title='모델 출시 시기와 성능 관계' if lang == 'ko' else 'Model Release Date vs Performance',
+                            labels={'date_numeric': '출시 시기' if lang == 'ko' else 'Release Date'}
+                        )
+                    
+                        # 수동으로 간단한 추세선 추가
+                        x_numeric = table3_plot['date_numeric'].values
+                        y_values = table3_plot['평균 정답률 (%)' if lang == 'ko' else 'Avg Accuracy (%)'].values
+                    
+                        # 선형 회귀 계산
+                        z = np.polyfit(x_numeric, y_values, 1)
+                        p = np.poly1d(z)
+                    
+                        # 추세선 추가
+                        fig.add_scatter(
+                            x=x_numeric,
+                            y=p(x_numeric),
+                            mode='lines',
+                            name='추세선' if lang == 'ko' else 'Trend',
+                            line=dict(color='red', dash='dash')
+                        )
+                        use_trendline = False
                 
-                for model2 in models_list:
-                    if model1 == model2:
-                        row.append(100.0)
+                    # X축 레이블을 원래 날짜 형식으로 변경
+                    tickvals = sorted(table3_plot['date_numeric'].unique())
+                    ticktext = [f"{str(val)[:4]}-{str(val)[4:]}" for val in tickvals]
+                
+                    fig.update_traces(textposition='top center', marker=dict(size=10, line=dict(width=2, color='black')), selector=dict(mode='markers'))
+                    fig.update_layout(
+                        height=500,
+                        xaxis=dict(
+                            tickmode='array',
+                            tickvals=tickvals,
+                            ticktext=ticktext,
+                            tickangle=45
+                        ),
+                        yaxis_title='평균 정답률 (%)' if lang == 'ko' else 'Avg Accuracy (%)',
+                        yaxis=dict(range=[0, 100])
+                    )
+                
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                    st.markdown("---")
+        
+            # Figure 8: 난이도별 레이더 차트
+            if '정답여부' in filtered_df.columns:
+                st.subheader("🎯 " + ("Figure 8: 난이도 구간별 모델 성능 레이더 차트" if lang == 'ko' else "Figure 8: Model Performance Radar by Difficulty"))
+            
+                # 문제별 난이도 계산
+                difficulty = filtered_df.groupby('Question')['정답여부'].mean() * 100
+            
+                # 난이도 구간 분류
+                def classify_difficulty_simple(score):
+                    if score < 20:
+                        return '매우 어려움' if lang == 'ko' else 'Very Hard'
+                    elif score < 40:
+                        return '어려움' if lang == 'ko' else 'Hard'
+                    elif score < 60:
+                        return '보통' if lang == 'ko' else 'Medium'
+                    elif score < 80:
+                        return '쉬움' if lang == 'ko' else 'Easy'
                     else:
-                        m2_data = model_wrong_dict[model2]
+                        return '매우 쉬움' if lang == 'ko' else 'Very Easy'
+            
+                # 상위 5개 모델 선택
+                top_models = filtered_df.groupby('모델')['정답여부'].mean().nlargest(5).index.tolist()
+                top_models_mask = filtered_df['모델'].isin(top_models)
+            
+                # 난이도 레벨 계산 (필요한 데이터만)
+                difficulty_levels = filtered_df.loc[top_models_mask, 'Question'].map(
+                    lambda q: classify_difficulty_simple(difficulty.get(q, 50))
+                )
+            
+                # 필요한 데이터만 추출하여 분석
+                radar_df = pd.DataFrame({
+                    '모델': filtered_df.loc[top_models_mask, '모델'],
+                    'difficulty_level': difficulty_levels,
+                    '정답여부': filtered_df.loc[top_models_mask, '정답여부']
+                })
+            
+                # 모델별 난이도별 성능
+                radar_data = radar_df.groupby(['모델', 'difficulty_level'])['정답여부'].mean() * 100
+                radar_pivot = radar_data.unstack(fill_value=0)
+            
+                if len(radar_pivot) > 0 and len(radar_pivot.columns) > 0:
+                    # 레이더 차트 생성
+                    fig = go.Figure()
+                
+                    for model in radar_pivot.index:
+                        fig.add_trace(go.Scatterpolar(
+                            r=radar_pivot.loc[model].values,
+                            theta=radar_pivot.columns,
+                            fill='toself',
+                            name=model
+                        ))
+                
+                    fig.update_layout(
+                        polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+                        showlegend=True,
+                        title='난이도별 모델 성능 비교' if lang == 'ko' else 'Model Performance by Difficulty',
+                        height=600
+                    )
+                
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("레이더 차트를 생성할 데이터가 부족합니다." if lang == 'ko' else "Insufficient data for radar chart.")
+        
+            st.markdown("---")
+        
+            # Figure 9: 비용 대비 성능 산점도 (NEW!)
+            if table9 is not None and len(table9) > 0:
+                st.subheader("💰 " + ("Figure 9: 비용 대비 성능 산점도" if lang == 'ko' else "Figure 9: Cost vs Performance Scatter"))
+            
+                fig = px.scatter(
+                    table9,
+                    x='정답 1000개당 비용 ($)' if lang == 'ko' else 'Cost per 1K Correct ($)',
+                    y='정답률 (%)' if lang == 'ko' else 'Accuracy (%)',
+                    text='모델명' if lang == 'ko' else 'Model',
+                    title='비용 효율성 분석 (비용 vs 정확도)' if lang == 'ko' else 'Cost Efficiency Analysis (Cost vs Accuracy)',
+                    labels={
+                        '정답 1000개당 비용 ($)' if lang == 'ko' else 'Cost per 1K Correct ($)': '정답 1000개당 비용 ($)' if lang == 'ko' else 'Cost per 1K Correct ($)',
+                        '정답률 (%)' if lang == 'ko' else 'Accuracy (%)': '정답률 (%)' if lang == 'ko' else 'Accuracy (%)'
+                    }
+                )
+            
+                fig.update_traces(
+                    textposition='top center',
+                    marker=dict(size=12, line=dict(width=2, color='black'))
+                )
+                fig.update_layout(height=500)
+                st.plotly_chart(fig, use_container_width=True)
+            
+                st.info("💡 " + ("왼쪽 위(낮은 비용 + 높은 정확도)가 가장 효율적입니다." if lang == 'ko' else "Top left (low cost + high accuracy) is most efficient."))
+            
+                st.markdown("---")
+        
+            # Figure 10: 오답 패턴 원형 차트
+            if table10 is not None and len(table10) > 0:
+                st.subheader("🥧 " + ("Figure 10: 오답 패턴 빈도 원형 차트" if lang == 'ko' else "Figure 10: Error Pattern Distribution"))
+            
+                fig = px.pie(
+                    table10,
+                    values='문항 수' if lang == 'ko' else 'Problem Count',
+                    names='오답 패턴 유형' if lang == 'ko' else 'Error Pattern Type',
+                    title='오답 패턴별 비율' if lang == 'ko' else 'Distribution of Error Patterns'
+                )
+                fig.update_traces(textposition='inside', textinfo='percent+label')
+                fig.update_layout(height=500)
+                st.plotly_chart(fig, use_container_width=True)
+        
+            # Figure 11: 모델별 오답 일치도 히트맵
+            st.subheader("🔥 " + ("Figure 11: 모델별 오답 일치도 히트맵" if lang == 'ko' else "Figure 11: Model Error Agreement Heatmap"))
+        
+            models_list = filtered_df['모델'].unique()
+        
+            if len(models_list) >= 2:
+                # 최적화: 모델별 오답 정보를 미리 계산하여 딕셔너리로 저장
+                model_wrong_dict = {}
+                for model in models_list:
+                    model_df = filtered_df[filtered_df['모델'] == model]
+                    # Question별 정답여부를 딕셔너리로 저장
+                    wrong_questions = set(model_df[~model_df['정답여부']]['Question'].values)
+                    all_questions = set(model_df['Question'].values)
+                    model_wrong_dict[model] = {
+                        'wrong': wrong_questions,
+                        'all': all_questions
+                    }
+            
+                # 모델 쌍별 오답 일치도 계산 (최적화된 버전)
+                agreement_matrix = []
+            
+                for model1 in models_list:
+                    row = []
+                    m1_data = model_wrong_dict[model1]
+                
+                    for model2 in models_list:
+                        if model1 == model2:
+                            row.append(100.0)
+                        else:
+                            m2_data = model_wrong_dict[model2]
                         
-                        # 공통 문제
-                        common_questions = m1_data['all'] & m2_data['all']
+                            # 공통 문제
+                            common_questions = m1_data['all'] & m2_data['all']
                         
-                        if len(common_questions) > 0:
-                            # 두 모델이 모두 틀린 문제 (공통 문제 중)
-                            both_wrong = len(m1_data['wrong'] & m2_data['wrong'] & common_questions)
+                            if len(common_questions) > 0:
+                                # 두 모델이 모두 틀린 문제 (공통 문제 중)
+                                both_wrong = len(m1_data['wrong'] & m2_data['wrong'] & common_questions)
                             
-                            # 각 모델이 틀린 문제 수 (공통 문제 중)
-                            model1_wrong_count = len(m1_data['wrong'] & common_questions)
-                            model2_wrong_count = len(m2_data['wrong'] & common_questions)
+                                # 각 모델이 틀린 문제 수 (공통 문제 중)
+                                model1_wrong_count = len(m1_data['wrong'] & common_questions)
+                                model2_wrong_count = len(m2_data['wrong'] & common_questions)
                             
-                            total_wrong = model1_wrong_count + model2_wrong_count - both_wrong
+                                total_wrong = model1_wrong_count + model2_wrong_count - both_wrong
                             
-                            if total_wrong > 0:
-                                agreement = (both_wrong / total_wrong) * 100
+                                if total_wrong > 0:
+                                    agreement = (both_wrong / total_wrong) * 100
+                                else:
+                                    agreement = 0
                             else:
                                 agreement = 0
-                        else:
-                            agreement = 0
                         
-                        row.append(round(agreement, 1))
+                            row.append(round(agreement, 1))
                 
-                agreement_matrix.append(row)
+                    agreement_matrix.append(row)
             
-            # 히트맵 생성
-            fig = go.Figure(data=go.Heatmap(
-                z=agreement_matrix,
-                x=models_list,
-                y=models_list,
-                colorscale='Reds',
-                text=agreement_matrix,
-                texttemplate='%{text:.1f}',
-                textfont={"size": int(10 * chart_text_size)},
-                colorbar=dict(title="일치도 (%)" if lang == 'ko' else "Agreement (%)")
-            ))
+                # 히트맵 생성
+                fig = go.Figure(data=go.Heatmap(
+                    z=agreement_matrix,
+                    x=models_list,
+                    y=models_list,
+                    colorscale='Reds',
+                    text=agreement_matrix,
+                    texttemplate='%{text:.1f}',
+                    textfont={"size": int(10 * chart_text_size)},
+                    colorbar=dict(title="일치도 (%)" if lang == 'ko' else "Agreement (%)")
+                ))
             
-            fig.update_layout(
-                title='모델 간 오답 일치도' if lang == 'ko' else 'Error Agreement Between Models',
-                height=600,
-                xaxis_title='모델' if lang == 'ko' else 'Model',
-                yaxis_title='모델' if lang == 'ko' else 'Model'
-            )
-            fig.update_xaxes(tickangle=45)
+                fig.update_layout(
+                    title='모델 간 오답 일치도' if lang == 'ko' else 'Error Agreement Between Models',
+                    height=600,
+                    xaxis_title='모델' if lang == 'ko' else 'Model',
+                    yaxis_title='모델' if lang == 'ko' else 'Model'
+                )
+                fig.update_xaxes(tickangle=45)
             
+<<<<<<< HEAD
             st.plotly_chart(fig, width='stretch')
         else:
             st.info("모델이 2개 이상 필요합니다." if lang == 'ko' else "At least 2 models required.")
@@ -7114,39 +9671,115 @@ def main():
             
             st.plotly_chart(fig, width='stretch')
             
+=======
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("모델이 2개 이상 필요합니다." if lang == 'ko' else "At least 2 models required.")
+        
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
             st.markdown("---")
+        
+            # Figure 12 & 13: 벤치마크 비교 시각화 (NEW!)
+            if table11 is not None and len(table11) > 0:
+                st.subheader("📊 " + ("Figure 12: SafetyQ&A vs 범용 벤치마크 산점도 행렬" if lang == 'ko' else "Figure 12: Benchmark Scatter Plot Matrix"))
             
-            # Figure 13: 벤치마크 히트맵
-            st.subheader("🔥 " + ("Figure 13: 벤치마크 유형별 모델 성능 프로파일" if lang == 'ko' else "Figure 13: Model Performance Profile by Benchmark"))
+                # 벤치마크 컬럼만 선택
+                benchmark_cols = ['SafetyQ&A', 'MMLU', 'GPQA', 'MMLU-Pro']
+                model_col = '모델명' if lang == 'ko' else 'Model'
             
-            # 히트맵 데이터 준비
-            heatmap_data = table11.set_index(model_col)[benchmark_cols]
+                # 산점도 행렬 생성
+                from plotly.subplots import make_subplots
             
-            fig = go.Figure(data=go.Heatmap(
-                z=heatmap_data.values,
-                x=heatmap_data.columns,
-                y=heatmap_data.index,
-                colorscale='RdYlGn',
-                text=np.round(heatmap_data.values, 1),
-                texttemplate='%{text:.1f}',
-                textfont={"size": int(12 * chart_text_size)},
-                colorbar=dict(title="점수" if lang == 'ko' else "Score"),
-                zmin=0,
-                zmax=100
-            ))
+                n = len(benchmark_cols)
+                fig = make_subplots(
+                    rows=n,
+                    cols=n,
+                    subplot_titles=[f"{b1} vs {b2}" for b1 in benchmark_cols for b2 in benchmark_cols],
+                    horizontal_spacing=0.05,
+                    vertical_spacing=0.05
+                )
             
-            fig.update_layout(
-                title='모델별 벤치마크 성능 히트맵' if lang == 'ko' else 'Model Performance Heatmap by Benchmark',
-                height=600,
-                xaxis_title='벤치마크' if lang == 'ko' else 'Benchmark',
-                yaxis_title='모델' if lang == 'ko' else 'Model'
-            )
+                for i, bench1 in enumerate(benchmark_cols, 1):
+                    for j, bench2 in enumerate(benchmark_cols, 1):
+                        if i == j:
+                            # 대각선: 히스토그램
+                            fig.add_trace(
+                                go.Histogram(
+                                    x=table11[bench1],
+                                    name=bench1,
+                                    showlegend=False,
+                                    marker_color='lightblue'
+                                ),
+                                row=i,
+                                col=j
+                            )
+                        else:
+                            # 비대각선: 산점도
+                            fig.add_trace(
+                                go.Scatter(
+                                    x=table11[bench2],
+                                    y=table11[bench1],
+                                    mode='markers',
+                                    name=f"{bench1} vs {bench2}",
+                                    showlegend=False,
+                                    marker=dict(size=8, color='blue', opacity=0.6),
+                                    text=table11[model_col],
+                                    hovertemplate=f"<b>%{{text}}</b><br>{bench2}: %{{x:.1f}}<br>{bench1}: %{{y:.1f}}<extra></extra>"
+                                ),
+                                row=i,
+                                col=j
+                            )
             
+<<<<<<< HEAD
             st.plotly_chart(fig, width='stretch')
+=======
+                fig.update_layout(
+                    title='벤치마크 간 상관관계 행렬' if lang == 'ko' else 'Benchmark Correlation Matrix',
+                    height=800,
+                    showlegend=False
+                )
+>>>>>>> 27156c9fc6d0d7001b002b091948658c11fe32b4
             
-            # 인사이트
-            st.success("💡 " + ("SafetyQ&A는 전문 영역(안전/법령) 벤치마크로, 범용 벤치마크(MMLU, GPQA)와 다른 패턴을 보입니다." if lang == 'ko' else "SafetyQ&A is a specialized benchmark (safety/law) showing different patterns from general benchmarks (MMLU, GPQA)."))
+                st.plotly_chart(fig, use_container_width=True)
+            
+                st.markdown("---")
+            
+                # Figure 13: 벤치마크 히트맵
+                st.subheader("🔥 " + ("Figure 13: 벤치마크 유형별 모델 성능 프로파일" if lang == 'ko' else "Figure 13: Model Performance Profile by Benchmark"))
+            
+                # 히트맵 데이터 준비
+                heatmap_data = table11.set_index(model_col)[benchmark_cols]
+            
+                fig = go.Figure(data=go.Heatmap(
+                    z=heatmap_data.values,
+                    x=heatmap_data.columns,
+                    y=heatmap_data.index,
+                    colorscale='RdYlGn',
+                    text=np.round(heatmap_data.values, 1),
+                    texttemplate='%{text:.1f}',
+                    textfont={"size": int(12 * chart_text_size)},
+                    colorbar=dict(title="점수" if lang == 'ko' else "Score"),
+                    zmin=0,
+                    zmax=100
+                ))
+            
+                fig.update_layout(
+                    title='모델별 벤치마크 성능 히트맵' if lang == 'ko' else 'Model Performance Heatmap by Benchmark',
+                    height=600,
+                    xaxis_title='벤치마크' if lang == 'ko' else 'Benchmark',
+                    yaxis_title='모델' if lang == 'ko' else 'Model'
+                )
+            
+                st.plotly_chart(fig, use_container_width=True)
+            
+                # 인사이트
+                st.success("💡 " + ("SafetyQ&A는 전문 영역(안전/법령) 벤치마크로, 범용 벤치마크(MMLU, GPQA)와 다른 패턴을 보입니다." if lang == 'ko' else "SafetyQ&A is a specialized benchmark (safety/law) showing different patterns from general benchmarks (MMLU, GPQA)."))
     
+        except Exception as e:
+            st.error(f'⚠️ 이 탭에서 오류가 발생했습니다: {type(e).__name__}: {e}')
+            import traceback
+            with st.expander('오류 상세 정보'):
+                st.code(traceback.format_exc())
     st.sidebar.info(f"📊 {t['current_data']}: {len(filtered_df):,}{t['problems']}")
     
     # 메모리 정리 (대용량 데이터 처리 후)
