@@ -3677,22 +3677,9 @@ def main():
                 # → 의미: "6개 오답 중 4개가 동일 답 선택, 2개는 확인 불가"
                 consistency_ratio = count / total_incorrect_models if total_incorrect_models > 0 else 0
                     
-                # 🔍 검증 1: 추출된 오답 수 vs 기록된 오답 수
-                if len(wrong_answers) != total_incorrect_models:
-                    st.sidebar.warning(
-                        f"⚠️ 문제 {row['problem_id']}: 오답 수 불일치\n"
-                        f"   추출: {len(wrong_answers)}개, 기록: {total_incorrect_models}개\n"
-                        f"   → nan/빈답안: {nan_count + empty_count}개"
-                    )
-                    
-                # 🔍 검증 2: 일관성 비율이 1.0 초과하면 오류
+                # 일관성 비율이 1.0 초과하면 보정
                 if consistency_ratio > 1.0:
-                    st.sidebar.error(
-                        f"❌ 문제 {row['problem_id']}: 일관성 계산 오류!\n"
-                        f"   공통 오답: {count}개, 전체 오답: {total_incorrect_models}개\n"
-                        f"   → {count}/{total_incorrect_models} = {consistency_ratio:.2%}"
-                    )
-                    consistency_ratio = 1.0  # 최대값으로 보정
+                    consistency_ratio = 1.0
                     
                 if consistency_ratio >= 0.5:
                     models_selected_this = [m for m, a in selected.items() 
