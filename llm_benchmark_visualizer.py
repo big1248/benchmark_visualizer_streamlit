@@ -4414,33 +4414,6 @@ def main():
                 """)
         
         # ========================================
-        # 섹션 10: 오답률 Top 10 차트
-        # ========================================
-        st.markdown("---")
-        top_10_chart = top_20.head(10)
-        
-        fig = px.bar(
-            top_10_chart,
-            x='problem_id',
-            y='incorrect_rate',
-            title='오답률 높은 문제 Top 10' if lang == 'ko' else 'Top 10 Problems by Incorrect Rate',
-            text=[f"{x:.0%}" for x in top_10_chart['incorrect_rate']],
-            color='incorrect_rate',
-            color_continuous_scale='Reds',
-            range_color=[0, 1]
-        )
-        fig.update_traces(textposition='outside', marker_line_color='black', marker_line_width=1.5)
-        fig.update_layout(
-            height=500,
-            showlegend=False,
-            yaxis_title='오답률',
-            xaxis_title='문제 번호',
-            yaxis=dict(range=[0, 1])
-        )
-        fig.update_xaxes(tickangle=45)
-        st.plotly_chart(fig, width='stretch')
-        
-        # ========================================
         # 섹션 11: 고오답률 & 고일관성 문제 분석 (NEW!)
         # ========================================
         st.markdown("---")
