@@ -3274,27 +3274,33 @@ def main():
         problem_analysis['CorrectAnswer'] = problem_analysis.get('Answer', pd.Series(['Unknown'] * len(problem_analysis)))
         problem_analysis['law_status'] = problem_analysis.get('law', pd.Series(['Unknown'] * len(problem_analysis)))
         
-        # ⚡ 모델별 정오답 및 선택한 답 - 딕셔너리 기반 일괄 처리
-        grouped = filtered_df.groupby('unique_question_id')
+        # ⚡ 모델별 정오답 및 선택한 답 - 순수 벡터 연산 (apply 제거)
         
-        # 정답/오답 모델 목록
-        correct_models_map = grouped.apply(
-            lambda g: '✓ ' + ', '.join(sorted(g[g['정답여부'] == True]['모델'].unique())) if g['정답여부'].any() else '-'
-        ).to_dict()
-        incorrect_models_map = grouped.apply(
-            lambda g: '✗ ' + ', '.join(sorted(g[g['정답여부'] == False]['모델'].unique())) if (~g['정답여부']).any() else '-'
+        # 정답 모델 목록 (벡터화)
+        correct_df = filtered_df[filtered_df['정답여부'] == True][['unique_question_id', '모델']]
+        correct_models_map = correct_df.groupby('unique_question_id')['모델'].apply(
+            lambda x: '✓ ' + ', '.join(sorted(x.unique()))
         ).to_dict()
         
-        # 선택한 답 딕셔너리
+        # 오답 모델 목록 (벡터화)
+        incorrect_df = filtered_df[filtered_df['정답여부'] == False][['unique_question_id', '모델']]
+        incorrect_models_map = incorrect_df.groupby('unique_question_id')['모델'].apply(
+            lambda x: '✗ ' + ', '.join(sorted(x.unique()))
+        ).to_dict()
+        
+        # 선택한 답 딕셔너리 (순수 벡터화 - apply 완전 제거)
         if '예측답' in filtered_df.columns:
-            selected_answers_map = grouped.apply(
-                lambda g: dict(zip(g['모델'].values, g['예측답'].fillna('N/A').values))
-            ).to_dict()
+            answers_df = filtered_df[['unique_question_id', '모델', '예측답']].copy()
+            answers_df['예측답'] = answers_df['예측답'].fillna('N/A')
+            # pivot으로 한 번에 변환 후 딕셔너리로
+            selected_answers_map = {}
+            for uid, grp in answers_df.groupby('unique_question_id'):
+                selected_answers_map[uid] = dict(zip(grp['모델'].values, grp['예측답'].values))
         else:
             selected_answers_map = {uid: {} for uid in problem_analysis['unique_question_id']}
         
-        problem_analysis['correct_models'] = problem_analysis['unique_question_id'].map(correct_models_map)
-        problem_analysis['incorrect_models'] = problem_analysis['unique_question_id'].map(incorrect_models_map)
+        problem_analysis['correct_models'] = problem_analysis['unique_question_id'].map(correct_models_map).fillna('-')
+        problem_analysis['incorrect_models'] = problem_analysis['unique_question_id'].map(incorrect_models_map).fillna('-')
         problem_analysis['selected_answers'] = problem_analysis['unique_question_id'].map(selected_answers_map)
         
         # 오답률 순으로 정렬
@@ -3499,107 +3505,110 @@ def main():
         consistent_wrong_patterns = []
         extraction_failures = []  # 답안 추출 실패 추적
         
-        for idx, row in problem_analysis.iterrows():
-            # ⭐ 핵심 변경: 오답률 50% 이상 & 최소 2개 이상 오답인 문제만 분석
-            if row['incorrect_rate'] >= 0.5 and row['incorrect_count'] >= 2:
-                selected = row['selected_answers']
-                correct = row['CorrectAnswer']
+        # ⚡ 최적화: 조건에 맞는 문제만 미리 필터링 (전체 루프 방지)
+        high_incorrect = problem_analysis[
+            (problem_analysis['incorrect_rate'] >= 0.5) & (problem_analysis['incorrect_count'] >= 2)
+        ]
+        
+        for idx, row in high_incorrect.iterrows():
+            selected = row['selected_answers']
+            correct = row['CorrectAnswer']
                 
-                # 전체 평가 모델 수
-                total_models = row['total_count']
+            # 전체 평가 모델 수
+            total_models = row['total_count']
                 
-                # 🔍 올바른 전체 오답 모델 수 계산
-                total_incorrect_models = row['incorrect_count']  # problem_analysis에서 계산된 값 사용
+            # 🔍 올바른 전체 오답 모델 수 계산
+            total_incorrect_models = row['incorrect_count']  # problem_analysis에서 계산된 값 사용
                 
-                # 답안 추출 통계
-                valid_answers = 0
-                nan_count = 0
-                empty_count = 0
+            # 답안 추출 통계
+            valid_answers = 0
+            nan_count = 0
+            empty_count = 0
                 
-                # 오답을 선택한 모델들의 답변 수집
-                wrong_answers = []
-                wrong_answer_models = []  # 오답 모델 추적
+            # 오답을 선택한 모델들의 답변 수집
+            wrong_answers = []
+            wrong_answer_models = []  # 오답 모델 추적
                 
-                for model, answer in selected.items():
-                    if pd.isna(answer):
-                        nan_count += 1
-                    elif str(answer).strip() == '':
-                        empty_count += 1
-                    elif str(answer) != str(correct):
-                        # 정답이 아니면 오답
-                        wrong_answers.append(str(answer).strip())
-                        wrong_answer_models.append(model)
-                        valid_answers += 1
-                    else:
-                        valid_answers += 1
+            for model, answer in selected.items():
+                if pd.isna(answer):
+                    nan_count += 1
+                elif str(answer).strip() == '':
+                    empty_count += 1
+                elif str(answer) != str(correct):
+                    # 정답이 아니면 오답
+                    wrong_answers.append(str(answer).strip())
+                    wrong_answer_models.append(model)
+                    valid_answers += 1
+                else:
+                    valid_answers += 1
                 
-                # 🔍 추출 실패 기록
-                if nan_count > 0 or empty_count > 0:
-                    extraction_failures.append({
+            # 🔍 추출 실패 기록
+            if nan_count > 0 or empty_count > 0:
+                extraction_failures.append({
+                    'problem_id': row['problem_id'],
+                    'total_models': total_models,
+                    'valid_answers': valid_answers,
+                    'nan_count': nan_count,
+                    'empty_count': empty_count,
+                    'extraction_rate': (valid_answers / total_models * 100) if total_models > 0 else 0
+                })
+                
+            if wrong_answers and len(wrong_answers) >= 2:
+                from collections import Counter
+                answer_counts = Counter(wrong_answers)
+                most_common_wrong, count = answer_counts.most_common(1)[0]
+                    
+                # ⭐⭐⭐ 핵심 수정: 올바른 일관성 계산
+                # 일관성 = (가장 많이 선택된 오답 수) / (전체 오답 모델 수)
+                # 
+                # 중요: nan 처리
+                # - 분자(count): nan 제외 (추출 가능한 것만)
+                # - 분모(total_incorrect_models): nan 포함 (전체 오답)
+                # 
+                # 예시: 전체 오답 6개, 공통 오답 4개, nan 2개
+                # → 일관성 = 4/6 = 66.7%
+                # → 의미: "6개 오답 중 4개가 동일 답 선택, 2개는 확인 불가"
+                consistency_ratio = count / total_incorrect_models if total_incorrect_models > 0 else 0
+                    
+                # 🔍 검증 1: 추출된 오답 수 vs 기록된 오답 수
+                if len(wrong_answers) != total_incorrect_models:
+                    st.sidebar.warning(
+                        f"⚠️ 문제 {row['problem_id']}: 오답 수 불일치\n"
+                        f"   추출: {len(wrong_answers)}개, 기록: {total_incorrect_models}개\n"
+                        f"   → nan/빈답안: {nan_count + empty_count}개"
+                    )
+                    
+                # 🔍 검증 2: 일관성 비율이 1.0 초과하면 오류
+                if consistency_ratio > 1.0:
+                    st.sidebar.error(
+                        f"❌ 문제 {row['problem_id']}: 일관성 계산 오류!\n"
+                        f"   공통 오답: {count}개, 전체 오답: {total_incorrect_models}개\n"
+                        f"   → {count}/{total_incorrect_models} = {consistency_ratio:.2%}"
+                    )
+                    consistency_ratio = 1.0  # 최대값으로 보정
+                    
+                if consistency_ratio >= 0.5:
+                    models_selected_this = [m for m, a in selected.items() 
+                                          if pd.notna(a) and str(a).strip() == most_common_wrong]
+                        
+                    consistent_wrong_patterns.append({
                         'problem_id': row['problem_id'],
+                        'Question': row['Question'],
+                        'Subject': row['Subject'],
+                        'Year': row['Year'],
+                        'correct_answer': str(correct).strip(),
+                        'common_wrong_answer': most_common_wrong,
+                        'wrong_answer_count': count,  # 공통 오답 수
+                        'total_wrong': total_incorrect_models,  # ⭐ 전체 오답 모델 수 (올바른 값)
+                        'consistency_ratio': consistency_ratio,  # ⭐ 올바른 일관성
+                        'models_with_this_wrong': ', '.join(models_selected_this),
+                        'incorrect_rate': row['incorrect_rate'],
                         'total_models': total_models,
                         'valid_answers': valid_answers,
                         'nan_count': nan_count,
                         'empty_count': empty_count,
-                        'extraction_rate': (valid_answers / total_models * 100) if total_models > 0 else 0
+                        'extracted_wrong_count': len(wrong_answers)  # 실제 추출된 오답 수
                     })
-                
-                if wrong_answers and len(wrong_answers) >= 2:
-                    from collections import Counter
-                    answer_counts = Counter(wrong_answers)
-                    most_common_wrong, count = answer_counts.most_common(1)[0]
-                    
-                    # ⭐⭐⭐ 핵심 수정: 올바른 일관성 계산
-                    # 일관성 = (가장 많이 선택된 오답 수) / (전체 오답 모델 수)
-                    # 
-                    # 중요: nan 처리
-                    # - 분자(count): nan 제외 (추출 가능한 것만)
-                    # - 분모(total_incorrect_models): nan 포함 (전체 오답)
-                    # 
-                    # 예시: 전체 오답 6개, 공통 오답 4개, nan 2개
-                    # → 일관성 = 4/6 = 66.7%
-                    # → 의미: "6개 오답 중 4개가 동일 답 선택, 2개는 확인 불가"
-                    consistency_ratio = count / total_incorrect_models if total_incorrect_models > 0 else 0
-                    
-                    # 🔍 검증 1: 추출된 오답 수 vs 기록된 오답 수
-                    if len(wrong_answers) != total_incorrect_models:
-                        st.sidebar.warning(
-                            f"⚠️ 문제 {row['problem_id']}: 오답 수 불일치\n"
-                            f"   추출: {len(wrong_answers)}개, 기록: {total_incorrect_models}개\n"
-                            f"   → nan/빈답안: {nan_count + empty_count}개"
-                        )
-                    
-                    # 🔍 검증 2: 일관성 비율이 1.0 초과하면 오류
-                    if consistency_ratio > 1.0:
-                        st.sidebar.error(
-                            f"❌ 문제 {row['problem_id']}: 일관성 계산 오류!\n"
-                            f"   공통 오답: {count}개, 전체 오답: {total_incorrect_models}개\n"
-                            f"   → {count}/{total_incorrect_models} = {consistency_ratio:.2%}"
-                        )
-                        consistency_ratio = 1.0  # 최대값으로 보정
-                    
-                    if consistency_ratio >= 0.5:
-                        models_selected_this = [m for m, a in selected.items() 
-                                              if pd.notna(a) and str(a).strip() == most_common_wrong]
-                        
-                        consistent_wrong_patterns.append({
-                            'problem_id': row['problem_id'],
-                            'Question': row['Question'],
-                            'Subject': row['Subject'],
-                            'Year': row['Year'],
-                            'correct_answer': str(correct).strip(),
-                            'common_wrong_answer': most_common_wrong,
-                            'wrong_answer_count': count,  # 공통 오답 수
-                            'total_wrong': total_incorrect_models,  # ⭐ 전체 오답 모델 수 (올바른 값)
-                            'consistency_ratio': consistency_ratio,  # ⭐ 올바른 일관성
-                            'models_with_this_wrong': ', '.join(models_selected_this),
-                            'incorrect_rate': row['incorrect_rate'],
-                            'total_models': total_models,
-                            'valid_answers': valid_answers,
-                            'nan_count': nan_count,
-                            'empty_count': empty_count,
-                            'extracted_wrong_count': len(wrong_answers)  # 실제 추출된 오답 수
-                        })
         
         # 🚨 답안 추출 실패 통계 표시
         if extraction_failures:
