@@ -3321,13 +3321,14 @@ def main():
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            # 분석 문제 수 = unique_question_id 고유값 (정확한 문제 수)
-            display_total = len(problem_analysis)
+            # 분석 문제 수 = 전체 요약과 동일한 방식 (데이터 행 수 / 모델 수)
+            num_models_analysis = filtered_df['모델'].nunique()
+            display_total = round(len(filtered_df) / num_models_analysis) if num_models_analysis > 0 else len(problem_analysis)
             
             st.metric(
                 "분석 문제 수" if lang == 'ko' else "Total Problems",
                 f"{display_total:,}",
-                help="오답 분석 대상 고유 문제 수"
+                help="총 문제 수 (전체 요약과 동일 기준)"
             )
         
         with col2:
