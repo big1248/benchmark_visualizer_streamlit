@@ -3203,11 +3203,27 @@ def main():
         # 기본 오답 분석 데이터 준비
         # 문제별 오답 통계 계산
         # 🔧 수정: 고유 식별자 생성하여 중복 방지
-        # Question만으로는 중복 가능 (여러 테스트에서 같은 문제 번호)
-        # → Test Name + Year + Session + Question으로 고유 식별자 생성
+        # 🔧 수정: 테스트명(파일명 기준) + Year + Session + Number(문제번호)로 고유 식별자 생성
+        # - Test Name(CSV 내부)은 과목 구분이 안 되어 문제 수가 부풀려짐
+        # - Question(문제 텍스트)은 동일 텍스트 재출제 시 합쳐지거나 미세 차이로 분리됨
+        # - 테스트명 + Number 조합이 정확히 6,659개 문제를 식별
         
         # 고유 식별자 생성
-        if 'Test Name' in filtered_df.columns:
+        if '테스트명' in filtered_df.columns and 'Number' in filtered_df.columns:
+            filtered_df['unique_question_id'] = (
+                filtered_df['테스트명'].astype(str) + '_' +
+                filtered_df['Year'].astype(str) + '_' +
+                filtered_df['Session'].astype(str) + '_' +
+                filtered_df['Number'].astype(str)
+            )
+        elif 'Test Name' in filtered_df.columns and 'Number' in filtered_df.columns:
+            filtered_df['unique_question_id'] = (
+                filtered_df['Test Name'].astype(str) + '_' +
+                filtered_df['Year'].astype(str) + '_' +
+                filtered_df['Session'].astype(str) + '_' +
+                filtered_df['Number'].astype(str)
+            )
+        elif 'Test Name' in filtered_df.columns:
             filtered_df['unique_question_id'] = (
                 filtered_df['Test Name'].astype(str) + '_' +
                 filtered_df['Year'].astype(str) + '_' +
@@ -3318,23 +3334,13 @@ def main():
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            # 🔧 수정: testsets 기준으로 계산 (전체 요약과 동일)
-            total_problems_testset = 0
-            if selected_tests:
-                for test_name in selected_tests:
-                    if test_name in testsets:
-                        total_problems_testset += len(testsets[test_name])
-            
-            # 백업: problem_analysis 기준
-            total_problems_analysis = len(problem_analysis)
-            
-            # 우선순위: testsets > analysis
-            display_total = total_problems_testset if total_problems_testset > 0 else total_problems_analysis
+            # 분석 문제 수 = unique_question_id 고유값 (정확한 문제 수)
+            display_total = len(problem_analysis)
             
             st.metric(
                 "분석 문제 수" if lang == 'ko' else "Total Problems",
                 f"{display_total:,}",
-                help="테스트셋 기준 총 문제 수"
+                help="오답 분석 대상 고유 문제 수"
             )
         
         with col2:
