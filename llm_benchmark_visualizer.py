@@ -3203,34 +3203,22 @@ def main():
         # 기본 오답 분석 데이터 준비
         # 문제별 오답 통계 계산
         # 🔧 수정: 고유 식별자 생성하여 중복 방지
-        # 🔧 수정: 테스트명 + Year + Session + Subject + Number로 고유 식별자 생성
-        # Subject 포함 → 같은 시험 내 다른 과목의 같은 번호 문제 구분
+        # 🔧 고유 식별자: 테스트명 + Year + Session + Subject + Number + Question
+        # - 테스트명(파일명 기준): 과목별 파일 구분
+        # - Number: 문제 번호
+        # - Question: 동일 번호 다른 문제 구분 (완전 고유 보장)
         
-        # 고유 식별자 생성
-        if '테스트명' in filtered_df.columns and 'Number' in filtered_df.columns and 'Subject' in filtered_df.columns:
-            filtered_df['unique_question_id'] = (
-                filtered_df['테스트명'].astype(str) + '_' +
-                filtered_df['Year'].astype(str) + '_' +
-                filtered_df['Session'].astype(str) + '_' +
-                filtered_df['Subject'].astype(str) + '_' +
-                filtered_df['Number'].astype(str)
-            )
-        elif '테스트명' in filtered_df.columns and 'Number' in filtered_df.columns:
-            filtered_df['unique_question_id'] = (
-                filtered_df['테스트명'].astype(str) + '_' +
-                filtered_df['Year'].astype(str) + '_' +
-                filtered_df['Session'].astype(str) + '_' +
-                filtered_df['Number'].astype(str)
-            )
-        elif 'Test Name' in filtered_df.columns:
-            filtered_df['unique_question_id'] = (
-                filtered_df['Test Name'].astype(str) + '_' +
-                filtered_df['Year'].astype(str) + '_' +
-                filtered_df['Session'].astype(str) + '_' +
-                filtered_df['Question'].astype(str)
-            )
+        id_parts = []
+        for col in ['테스트명', 'Year', 'Session', 'Subject', 'Number', 'Question']:
+            if col in filtered_df.columns:
+                id_parts.append(filtered_df[col].astype(str))
+        
+        if id_parts:
+            filtered_df['unique_question_id'] = id_parts[0]
+            for part in id_parts[1:]:
+                filtered_df['unique_question_id'] = filtered_df['unique_question_id'] + '_' + part
         else:
-            filtered_df['unique_question_id'] = filtered_df['Question'].astype(str)
+            filtered_df['unique_question_id'] = filtered_df.index.astype(str)
         
         # 고유 식별자로 그룹화
         problem_analysis = filtered_df.groupby('unique_question_id').agg({
