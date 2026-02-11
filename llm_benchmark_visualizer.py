@@ -3203,22 +3203,21 @@ def main():
         # 기본 오답 분석 데이터 준비
         # 문제별 오답 통계 계산
         # 🔧 수정: 고유 식별자 생성하여 중복 방지
-        # 🔧 수정: 테스트명(파일명 기준) + Year + Session + Number(문제번호)로 고유 식별자 생성
-        # - Test Name(CSV 내부)은 과목 구분이 안 되어 문제 수가 부풀려짐
-        # - Question(문제 텍스트)은 동일 텍스트 재출제 시 합쳐지거나 미세 차이로 분리됨
-        # - 테스트명 + Number 조합이 정확히 6,659개 문제를 식별
+        # 🔧 수정: 테스트명 + Year + Session + Subject + Number로 고유 식별자 생성
+        # Subject 포함 → 같은 시험 내 다른 과목의 같은 번호 문제 구분
         
         # 고유 식별자 생성
-        if '테스트명' in filtered_df.columns and 'Number' in filtered_df.columns:
+        if '테스트명' in filtered_df.columns and 'Number' in filtered_df.columns and 'Subject' in filtered_df.columns:
             filtered_df['unique_question_id'] = (
                 filtered_df['테스트명'].astype(str) + '_' +
                 filtered_df['Year'].astype(str) + '_' +
                 filtered_df['Session'].astype(str) + '_' +
+                filtered_df['Subject'].astype(str) + '_' +
                 filtered_df['Number'].astype(str)
             )
-        elif 'Test Name' in filtered_df.columns and 'Number' in filtered_df.columns:
+        elif '테스트명' in filtered_df.columns and 'Number' in filtered_df.columns:
             filtered_df['unique_question_id'] = (
-                filtered_df['Test Name'].astype(str) + '_' +
+                filtered_df['테스트명'].astype(str) + '_' +
                 filtered_df['Year'].astype(str) + '_' +
                 filtered_df['Session'].astype(str) + '_' +
                 filtered_df['Number'].astype(str)
